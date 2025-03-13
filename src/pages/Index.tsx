@@ -43,7 +43,7 @@ const Index = () => {
               {['Football', 'Cricket', 'Basketball', 'Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
-                      <div className="add an image of a player playing football\n">
+                      <div className="absolute inset-0 flex items-center justify-center bg-red-50">
                         <span className="text-xl font-bold">{sport}</span>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-sportyfi-orange text-white text-center py-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
