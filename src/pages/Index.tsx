@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,10 +8,8 @@ import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
 import { Volleyball, Table, Dice6 } from 'lucide-react';
-
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
-  
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
@@ -45,61 +42,24 @@ const Index = () => {
           <div className="sportyfi-container">
             <h2 className="text-3xl font-bold mb-8 text-center">Popular Sports</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Billiards', 'Table Tennis'].map(sport => (
-                <Card key={sport} className="sportyfi-card overflow-hidden group">
+              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Billiards', 'Table Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
                       <AspectRatio ratio={1} className="w-full h-full">
-                        {sport === 'Football' && (
-                          <img 
-                            src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735&auto=format&fit=crop" 
-                            alt="Football player in action" 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {sport === 'Cricket' && (
-                          <img 
-                            src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1000&auto=format&fit=crop" 
-                            alt="Cricket player in action" 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {sport === 'Basketball' && (
-                          <img 
-                            src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000&auto=format&fit=crop" 
-                            alt="Basketball player in action" 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {sport === 'Tennis' && (
-                          <img 
-                            src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop" 
-                            alt="Tennis player in action" 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {sport === 'Kabaddi' && (
-                          <img 
-                            src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=1000&auto=format&fit=crop" 
-                            alt="Kabaddi player in action" 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        {sport === 'Volleyball' && (
-                          <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
+                        {sport === 'Football' && <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735&auto=format&fit=crop" alt="Football player in action" className="w-full h-full object-cover" />}
+                        {sport === 'Cricket' && <img src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1000&auto=format&fit=crop" alt="Cricket player in action" className="w-full h-full object-cover" />}
+                        {sport === 'Basketball' && <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000&auto=format&fit=crop" alt="Basketball player in action" className="w-full h-full object-cover" />}
+                        {sport === 'Tennis' && <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop" alt="Tennis player in action" className="w-full h-full object-cover" />}
+                        {sport === 'Kabaddi' && <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=1000&auto=format&fit=crop" alt="Kabaddi player in action" className="w-full h-full object-cover" />}
+                        {sport === 'Volleyball' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
                             <Volleyball className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>
-                        )}
-                        {sport === 'Billiards' && (
-                          <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
+                          </div>}
+                        {sport === 'Billiards' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
                             <Dice6 className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>
-                        )}
-                        {sport === 'Table Tennis' && (
-                          <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
+                          </div>}
+                        {sport === 'Table Tennis' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
                             <Table className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>
-                        )}
+                          </div>}
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                           <span className="text-xl font-bold text-white">{sport}</span>
                         </div>
@@ -109,8 +69,7 @@ const Index = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </section>
@@ -222,5 +181,4 @@ const Index = () => {
       <Footer />
     </div>;
 };
-
 export default Index;
