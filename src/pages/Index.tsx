@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,9 @@ import SportyFiHeader from '@/components/SportyFiHeader';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
-
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
       <main className="flex-grow">
@@ -30,7 +26,7 @@ const Index = () => {
                 <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg">
                   Find Matches
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white/10 font-semibold px-6 py-6 h-auto text-lg">
+                <Button variant="outline" className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500">
                   Host a Match
                 </Button>
               </div>
@@ -44,11 +40,10 @@ const Index = () => {
           <div className="sportyfi-container">
             <h2 className="text-3xl font-bold mb-8 text-center">Popular Sports</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Football', 'Cricket', 'Basketball', 'Tennis'].map((sport) => (
-                <Card key={sport} className="sportyfi-card overflow-hidden group">
+              {['Football', 'Cricket', 'Basketball', 'Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center bg-red-50">
                         <span className="text-xl font-bold">{sport}</span>
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 bg-sportyfi-orange text-white text-center py-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
@@ -56,8 +51,7 @@ const Index = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </section>
@@ -69,11 +63,7 @@ const Index = () => {
               <h2 className="text-3xl font-bold">Matches Near You</h2>
               <div className="flex items-center mt-4 md:mt-0">
                 <span className="mr-2">Location:</span>
-                <select 
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="border rounded-md px-3 py-1"
-                >
+                <select value={location} onChange={e => setLocation(e.target.value)} className="border rounded-md px-3 py-1">
                   <option value="Mumbai">Mumbai</option>
                   <option value="Delhi">Delhi</option>
                   <option value="Bangalore">Bangalore</option>
@@ -171,8 +161,6 @@ const Index = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
