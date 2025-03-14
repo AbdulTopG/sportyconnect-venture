@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
-import { Redirect, useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,9 +71,7 @@ const Profile = () => {
   ];
 
   if (!user) {
-    return (
-      <Redirect to="/auth" />
-    );
+    return <Navigate to="/auth" />;
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
