@@ -59,6 +59,18 @@ const UpcomingMatches = ({ location }: UpcomingMatchesProps) => {
       skillLevel: 'Intermediate',
       host: 'Anjali M.',
     },
+    {
+      id: 5,
+      sportType: 'Badminton',
+      title: 'Morning Badminton Session',
+      location: 'Hyderabad',
+      venue: 'Gachibowli Stadium',
+      date: 'Sun, Aug 13, 2023',
+      time: '8:00 AM',
+      slots: { filled: 2, total: 4 },
+      skillLevel: 'Intermediate',
+      host: 'Kiran T.',
+    },
   ];
 
   // Filter matches by location
