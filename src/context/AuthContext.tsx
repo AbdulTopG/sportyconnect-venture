@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +26,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for active session on mount
     const getSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -55,7 +53,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     getSession();
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
@@ -94,13 +91,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Sign up successful:", data);
       
       if (data.user && !data.session) {
-        // Email confirmation required
         toast({
           title: "Account created successfully",
           description: "Please check your email for confirmation.",
         });
       } else if (data.session) {
-        // Auto-signed in
         toast({
           title: "Account created successfully",
           description: "You have been signed in automatically.",
@@ -154,14 +149,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log("Starting Google sign in...");
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       });
   
       if (error) {
+        console.error("Google sign in error:", error);
         toast({
           title: "Google Sign In Failed",
           description: error.message,
@@ -169,9 +170,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         throw error;
       }
+      
+      console.log("Google sign in successful:", data);
     } catch (error) {
       console.error("Google sign in error:", error);
-      throw error;
+      toast({
+        title: "Google Sign In Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -284,7 +291,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log("Signed out successfully");
       
-      // Clear auth state
       setUser(null);
       setSession(null);
       

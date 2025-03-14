@@ -26,3 +26,4 @@ export type Tables = Database['public']['Tables'];
 export type Match = Tables['matches']['Row'];
 export type Participant = Tables['participants']['Row'];
 export type Profile = Tables['profiles']['Row'];
+export type ParticipantWithProfile = Participant & { profile: Profile | null };

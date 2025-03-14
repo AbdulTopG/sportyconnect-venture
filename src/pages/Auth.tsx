@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
@@ -24,7 +23,6 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState(tabParam === 'signup' ? 'signup' : 'signin');
   const [showOtpInput, setShowOtpInput] = useState(false);
 
-  // Redirect if user is already logged in
   if (user) {
     return <Navigate to="/" replace />;
   }
@@ -65,6 +63,15 @@ const Auth = () => {
       } else {
         setError('An unexpected error occurred');
       }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Google sign in error in component:", err);
     }
   };
 
@@ -161,7 +168,7 @@ const Auth = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => signInWithGoogle()}
+                  onClick={handleGoogleSignIn}
                   disabled={isLoading}
                 >
                   <FcGoogle className="mr-2 h-5 w-5" />
