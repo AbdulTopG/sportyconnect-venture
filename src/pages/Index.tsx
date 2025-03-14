@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -12,6 +11,12 @@ import { Volleyball, Table, Dice6 } from 'lucide-react';
 
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
+  const navigate = useNavigate();
+  
+  const handleFindMatches = () => {
+    navigate('/matches');
+  };
+  
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
@@ -27,7 +32,10 @@ const Index = () => {
                 The ultimate platform to find local sports matches, showcase your skills, and compete in official tournaments.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg">
+                <Button 
+                  className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg"
+                  onClick={handleFindMatches}
+                >
                   Find Matches
                 </Button>
                 <Button variant="outline" className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500">
