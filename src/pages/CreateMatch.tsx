@@ -29,6 +29,18 @@ const CreateMatch = () => {
     description: '',
   });
   
+  // Redirect if not logged in
+  React.useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create a match",
+        variant: "destructive",
+      });
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+  
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -47,16 +59,6 @@ const CreateMatch = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to create a match",
-        variant: "destructive",
-      });
-      navigate('/auth');
-      return;
-    }
     
     // Validate form
     if (!formData.sport || !formData.location || !formData.date || !formData.time || !formData.teamSize) {
@@ -81,6 +83,10 @@ const CreateMatch = () => {
     }, 1500);
   };
   
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
+  
   return (
     <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
@@ -92,7 +98,7 @@ const CreateMatch = () => {
           <form onSubmit={handleSubmit} className="space-y-6 sportyfi-card">
             {/* Sport Type */}
             <div>
-              <Label htmlFor="sport">Sport Type</Label>
+              <Label htmlFor="sport">Sport Type *</Label>
               <Select 
                 onValueChange={(value) => handleSelectChange('sport', value)}
                 required
@@ -113,7 +119,7 @@ const CreateMatch = () => {
             
             {/* Location */}
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Location *</Label>
               <Input 
                 id="location" 
                 name="location" 
@@ -127,7 +133,7 @@ const CreateMatch = () => {
             {/* Date and Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Date</Label>
+                <Label>Date *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -144,13 +150,14 @@ const CreateMatch = () => {
                       selected={formData.date || undefined}
                       onSelect={handleDateChange}
                       initialFocus
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
               
               <div>
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="time">Time *</Label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <Input 
@@ -168,7 +175,7 @@ const CreateMatch = () => {
             
             {/* Team Size */}
             <div>
-              <Label htmlFor="teamSize">Team Size</Label>
+              <Label htmlFor="teamSize">Team Size *</Label>
               <Select 
                 onValueChange={(value) => handleSelectChange('teamSize', value)}
                 required

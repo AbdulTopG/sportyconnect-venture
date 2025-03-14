@@ -16,9 +16,10 @@ const MatchDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isJoining, setIsJoining] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
   
-  // Placeholder match data - in a real app, fetch this from a database
-  const match = {
+  // In a real app, fetch this from a database based on the ID
+  const [match, setMatch] = useState({
     id,
     sport: 'Basketball',
     location: 'Central Park Courts',
@@ -35,7 +36,7 @@ const MatchDetail = () => {
       { id: 'user1', name: 'Michael Scott', avatar: '' },
       { id: 'user2', name: 'Sara Williams', avatar: '' },
     ]
-  };
+  });
 
   const handleJoinMatch = () => {
     if (!user) {
@@ -53,11 +54,47 @@ const MatchDetail = () => {
     // Simulate API call
     setTimeout(() => {
       setIsJoining(false);
+      setHasJoined(true);
+      
+      // Update local state to reflect the joined status
+      setMatch(prev => ({
+        ...prev,
+        availableSlots: prev.availableSlots - 1,
+        participants: [
+          ...prev.participants, 
+          { id: user.id, name: user.email?.split('@')[0] || 'Anonymous User', avatar: '' }
+        ]
+      }));
+      
       toast({
         title: "Success!",
         description: "You've joined the match. See you there!",
       });
-      // In a real implementation, you would refresh data here
+    }, 1000);
+  };
+
+  const handleLeaveMatch = () => {
+    setIsJoining(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsJoining(false);
+      setHasJoined(false);
+      
+      // Update local state to reflect the left status
+      setMatch(prev => {
+        const updatedParticipants = prev.participants.filter(p => p.id !== user?.id);
+        return {
+          ...prev,
+          availableSlots: prev.availableSlots + 1,
+          participants: updatedParticipants
+        };
+      });
+      
+      toast({
+        title: "You've left the match",
+        description: "You are no longer participating in this match.",
+      });
     }, 1000);
   };
 
@@ -72,6 +109,10 @@ const MatchDetail = () => {
       </div>
     );
   }
+
+  // Check if current user is already a participant
+  const userIsParticipant = user && match.participants.some(p => p.id === user.id);
+  const matchIsFull = match.availableSlots === 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -89,15 +130,21 @@ const MatchDetail = () => {
                     <MapPin className="h-4 w-4 mr-1" />
                     <span>{match.location}</span>
                   </div>
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>{new Date(match.date).toLocaleDateString()}</span>
-                    <Clock className="h-4 w-4 ml-3 mr-1" />
-                    <span>{new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <div className="flex flex-wrap items-center text-gray-600 gap-2">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span>{new Date(match.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 ml-0 mr-1" />
+                      <span>{new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                   </div>
                 </div>
-                <Badge className="bg-green-500">
-                  {match.availableSlots} spots left
+                <Badge className={match.availableSlots > 0 ? "bg-green-500" : "bg-red-500"}>
+                  {match.availableSlots > 0 
+                    ? `${match.availableSlots} spots left` 
+                    : "Match Full"}
                 </Badge>
               </div>
               
@@ -118,13 +165,24 @@ const MatchDetail = () => {
                 </p>
               </div>
               
-              <Button 
-                onClick={handleJoinMatch}
-                disabled={isJoining || match.availableSlots === 0}
-                className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
-              >
-                {isJoining ? "Joining..." : match.availableSlots === 0 ? "Match Full" : "Join This Match"}
-              </Button>
+              {userIsParticipant ? (
+                <Button 
+                  onClick={handleLeaveMatch}
+                  disabled={isJoining}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {isJoining ? "Processing..." : "Leave Match"}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleJoinMatch}
+                  disabled={isJoining || matchIsFull}
+                  className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
+                >
+                  {isJoining ? "Joining..." : matchIsFull ? "Match Full" : "Join This Match"}
+                </Button>
+              )}
             </div>
             
             {/* Host and Participants */}
@@ -144,7 +202,7 @@ const MatchDetail = () => {
               </div>
               
               <div className="sportyfi-card">
-                <h2 className="text-lg font-semibold mb-4">Participants</h2>
+                <h2 className="text-lg font-semibold mb-4">Participants ({match.participants.length})</h2>
                 {match.participants.length > 0 ? (
                   <div className="space-y-3">
                     {match.participants.map(participant => (

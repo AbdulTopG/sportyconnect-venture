@@ -4,7 +4,6 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { Phone } from 'lucide-react';
 
 type AuthContextType = {
   user: User | null;
@@ -67,175 +66,205 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast({
-        title: "Sign Up Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
       });
+  
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+  
+      toast({
+        title: "Account created successfully",
+        description: "Please check your email for confirmation.",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error("Sign up error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Account created successfully",
-      description: "Please check your email for confirmation.",
-    });
-    
-    navigate('/');
-    setIsLoading(false);
   };
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast({
-        title: "Sign In Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      setIsLoading(false);
+  
+      if (error) {
+        toast({
+          title: "Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+  
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error("Sign in error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Welcome back!",
-      description: "You've successfully signed in.",
-    });
-    
-    navigate('/');
-    setIsLoading(false);
   };
 
   const signInWithGoogle = async () => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Google Sign In Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      setIsLoading(false);
+  
+      if (error) {
+        toast({
+          title: "Google Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+    } catch (error) {
+      console.error("Google sign in error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-    
-    // No need to navigate here as OAuth will redirect
-    setIsLoading(false);
   };
 
   const signInWithApple = async () => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Apple Sign In Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      setIsLoading(false);
+  
+      if (error) {
+        toast({
+          title: "Apple Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+    } catch (error) {
+      console.error("Apple sign in error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-    
-    // No need to navigate here as OAuth will redirect
-    setIsLoading(false);
   };
 
   const signInWithPhone = async (phone: string) => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-    });
-
-    if (error) {
-      toast({
-        title: "Phone Sign In Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
       });
-      setIsLoading(false);
+  
+      if (error) {
+        toast({
+          title: "Phone Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+  
+      toast({
+        title: "Verification code sent",
+        description: "Please check your phone for the verification code.",
+      });
+    } catch (error) {
+      console.error("Phone sign in error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Verification code sent",
-      description: "Please check your phone for the verification code.",
-    });
-    
-    setIsLoading(false);
   };
 
   const verifyOtp = async (phone: string, token: string) => {
     setIsLoading(true);
     
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms',
-    });
-
-    if (error) {
-      toast({
-        title: "Verification Failed",
-        description: error.message,
-        variant: "destructive",
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms',
       });
-      setIsLoading(false);
+  
+      if (error) {
+        toast({
+          title: "Verification Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+  
+      toast({
+        title: "Phone verified successfully",
+        description: "You've been signed in.",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error("OTP verification error:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
-
-    toast({
-      title: "Phone verified successfully",
-      description: "You've been signed in.",
-    });
-    
-    navigate('/');
-    setIsLoading(false);
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Sign Out Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+      
       toast({
-        title: "Sign Out Failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Signed out",
+        description: "You've been successfully signed out.",
       });
-      return;
+      
+      navigate('/');
+    } catch (error) {
+      console.error("Sign out error:", error);
     }
-    
-    toast({
-      title: "Signed out",
-      description: "You've been successfully signed out.",
-    });
-    
-    navigate('/');
   };
 
   return (
