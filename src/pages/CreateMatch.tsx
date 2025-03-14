@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { CalendarIcon, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const CreateMatch = () => {
   const navigate = useNavigate();
@@ -28,18 +29,6 @@ const CreateMatch = () => {
     teamSize: '',
     description: '',
   });
-  
-  // Redirect if not logged in
-  React.useEffect(() => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to create a match",
-        variant: "destructive",
-      });
-      navigate('/auth');
-    }
-  }, [user, navigate]);
   
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -59,6 +48,16 @@ const CreateMatch = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user is logged in before submitting
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create a match",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Validate form
     if (!formData.sport || !formData.location || !formData.date || !formData.time || !formData.teamSize) {
@@ -83,10 +82,6 @@ const CreateMatch = () => {
     }, 1500);
   };
   
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
-  
   return (
     <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
@@ -94,6 +89,22 @@ const CreateMatch = () => {
       <main className="flex-grow py-8">
         <div className="sportyfi-container max-w-3xl">
           <h1 className="text-2xl md:text-3xl font-bold mb-6">Host a Match</h1>
+          
+          {!user && (
+            <Alert variant="warning" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                You need to be logged in to host a match. 
+                <div className="mt-2">
+                  <Link to="/auth" className="text-sportyfi-orange hover:underline">
+                    Log in or sign up
+                  </Link>
+                  {" to continue."}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-6 sportyfi-card">
             {/* Sport Type */}
