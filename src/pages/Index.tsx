@@ -44,7 +44,7 @@ const Index = () => {
           <div className="sportyfi-container">
             <h2 className="text-3xl font-bold mb-8 text-center">Popular Sports</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Billiards', 'Table Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
+              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Snooker', 'Table Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
                       <AspectRatio ratio={1} className="w-full h-full">
@@ -54,7 +54,7 @@ const Index = () => {
                         {sport === 'Tennis' && <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop" alt="Tennis player in action" className="w-full h-full object-cover" />}
                         {sport === 'Kabaddi' && <img src="https://images.unsplash.com/photo-1587329310686-91414b8e3cb7?q=80&w=1000&auto=format&fit=crop" alt="Kabaddi players in action" className="w-full h-full object-cover" />}
                         {sport === 'Volleyball' && <img src="https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1000&auto=format&fit=crop" alt="Volleyball players in action" className="w-full h-full object-cover" />}
-                        {sport === 'Billiards' && <img src="https://images.unsplash.com/photo-1626454671409-5fdbfb6e70f7?q=80&w=1000&auto=format&fit=crop" alt="Billiards table with cue and balls" className="w-full h-full object-cover" />}
+                        {sport === 'Snooker' && <img src="https://images.unsplash.com/photo-1615039718183-beebf4dd6e55?q=80&w=1000&auto=format&fit=crop" alt="Snooker table with balls and cue" className="w-full h-full object-cover" />}
                         {sport === 'Table Tennis' && <img src="https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?q=80&w=1000&auto=format&fit=crop" alt="Table tennis paddle and ball" className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                           <span className="text-xl font-bold text-white">{sport}</span>
