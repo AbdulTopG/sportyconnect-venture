@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X, User, LogIn } from 'lucide-react';
+import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const SportyFiHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const isAuthenticated = false; // Replace with actual auth state
+  const { user, signOut } = useAuth();
+  const isAuthenticated = !!user;
 
   const navigationLinks = [
     { title: 'Home', path: '/' },
@@ -16,6 +18,11 @@ const SportyFiHeader = () => {
     { title: 'Leaderboards', path: '/leaderboards' },
     { title: 'About', path: '/about' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsOpen(false);
+  };
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
@@ -44,21 +51,31 @@ const SportyFiHeader = () => {
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <Link to="/profile">
-                <Button variant="outline" className="flex items-center space-x-2">
-                  <User size={18} />
-                  <span>Profile</span>
+              <>
+                <Link to="/profile">
+                  <Button variant="outline" className="flex items-center space-x-2">
+                    <User size={18} />
+                    <span>Profile</span>
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  className="flex items-center space-x-2"
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={18} />
+                  <span>Sign Out</span>
                 </Button>
-              </Link>
+              </>
             ) : (
               <>
-                <Link to="/login">
+                <Link to="/auth">
                   <Button variant="outline" className="flex items-center space-x-2">
                     <LogIn size={18} />
                     <span>Login</span>
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/auth?tab=signup">
                   <Button className="bg-sportyfi-orange hover:bg-red-600 text-white">
                     Sign Up
                   </Button>
@@ -105,23 +122,33 @@ const SportyFiHeader = () => {
                   </nav>
                   <div className="mt-auto border-t py-4 space-y-4">
                     {isAuthenticated ? (
-                      <Link
-                        to="/profile"
-                        className="w-full"
-                        onClick={() => setIsOpen(false)}
-                      >
+                      <>
+                        <Link
+                          to="/profile"
+                          className="w-full"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Button
+                            variant="outline"
+                            className="w-full flex items-center justify-center space-x-2"
+                          >
+                            <User size={18} />
+                            <span>Profile</span>
+                          </Button>
+                        </Link>
                         <Button
                           variant="outline"
                           className="w-full flex items-center justify-center space-x-2"
+                          onClick={handleSignOut}
                         >
-                          <User size={18} />
-                          <span>Profile</span>
+                          <LogOut size={18} />
+                          <span>Sign Out</span>
                         </Button>
-                      </Link>
+                      </>
                     ) : (
                       <>
                         <Link
-                          to="/login"
+                          to="/auth"
                           className="w-full"
                           onClick={() => setIsOpen(false)}
                         >
@@ -134,7 +161,7 @@ const SportyFiHeader = () => {
                           </Button>
                         </Link>
                         <Link
-                          to="/signup"
+                          to="/auth?tab=signup"
                           className="w-full"
                           onClick={() => setIsOpen(false)}
                         >
