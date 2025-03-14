@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -91,7 +90,7 @@ const CreateMatch = () => {
           <h1 className="text-2xl md:text-3xl font-bold mb-6">Host a Match</h1>
           
           {!user && (
-            <Alert variant="warning" className="mb-6">
+            <Alert className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Authentication Required</AlertTitle>
               <AlertDescription>

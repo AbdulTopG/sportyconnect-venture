@@ -20,6 +20,10 @@ const Index = () => {
   const handleHostMatch = () => {
     navigate('/matches/create');
   };
+
+  const handleSportCardClick = (sport: string) => {
+    navigate(`/matches?sport=${sport.toLowerCase()}`);
+  };
   
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
@@ -60,7 +64,12 @@ const Index = () => {
           <div className="sportyfi-container">
             <h2 className="text-3xl font-bold mb-8 text-center">Popular Sports</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Snooker', 'Table Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group">
+              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Snooker', 'Table Tennis'].map(sport => (
+                <Card 
+                  key={sport} 
+                  className="sportyfi-card overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleSportCardClick(sport)}
+                >
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
                       <AspectRatio ratio={1} className="w-full h-full">
@@ -81,7 +90,8 @@ const Index = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>)}
+                </Card>
+              ))}
             </div>
           </div>
         </section>
