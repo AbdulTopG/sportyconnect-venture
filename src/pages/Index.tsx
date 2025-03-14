@@ -8,6 +8,7 @@ import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
 import { Volleyball, Table, Dice6 } from 'lucide-react';
+
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
   return <div className="min-h-screen flex flex-col">
@@ -51,15 +52,9 @@ const Index = () => {
                         {sport === 'Basketball' && <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000&auto=format&fit=crop" alt="Basketball player in action" className="w-full h-full object-cover" />}
                         {sport === 'Tennis' && <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop" alt="Tennis player in action" className="w-full h-full object-cover" />}
                         {sport === 'Kabaddi' && <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?q=80&w=1000&auto=format&fit=crop" alt="Kabaddi player in action" className="w-full h-full object-cover" />}
-                        {sport === 'Volleyball' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
-                            <Volleyball className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>}
-                        {sport === 'Billiards' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
-                            <Dice6 className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>}
-                        {sport === 'Table Tennis' && <div className="w-full h-full bg-sportyfi-lightGray flex flex-col items-center justify-center">
-                            <Table className="w-16 h-16 text-sportyfi-orange mb-2" />
-                          </div>}
+                        {sport === 'Volleyball' && <img src="https://images.unsplash.com/photo-1592656094124-64e036cb68a7?q=80&w=1000&auto=format&fit=crop" alt="Volleyball players in action" className="w-full h-full object-cover" />}
+                        {sport === 'Billiards' && <img src="https://images.unsplash.com/photo-1611250503393-9424f314d265?q=80&w=1000&auto=format&fit=crop" alt="Billiards table with balls" className="w-full h-full object-cover" />}
+                        {sport === 'Table Tennis' && <img src="https://images.unsplash.com/photo-1584813539806-2538b8d918c2?q=80&w=1000&auto=format&fit=crop" alt="Table tennis paddle and ball" className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                           <span className="text-xl font-bold text-white">{sport}</span>
                         </div>
