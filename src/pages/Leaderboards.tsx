@@ -8,11 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, Award } from 'lucide-react';
+import { Search, TrendingUp, Award, Trophy } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Leaderboards = () => {
   const [sportFilter, setSportFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useIsMobile();
   
   // Placeholder leaderboard data
   const players = [
@@ -90,6 +92,9 @@ const Leaderboards = () => {
     return filtered;
   };
 
+  // Get all unique sports for filtering
+  const allSports = [...new Set([...players.map(p => p.sport.toLowerCase()), ...teams.map(t => t.sport.toLowerCase())])];
+
   return (
     <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
@@ -97,10 +102,13 @@ const Leaderboards = () => {
       <main className="flex-grow py-8">
         <div className="sportyfi-container">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold">Leaderboards</h1>
+            <div className="flex items-center">
+              <Trophy className="h-6 w-6 mr-2 text-sportyfi-orange" />
+              <h1 className="text-2xl md:text-3xl font-bold">Leaderboards</h1>
+            </div>
             
-            <div className="flex w-full md:w-auto gap-2">
-              <div className="w-full md:w-40">
+            <div className={`flex ${isMobile ? 'flex-col w-full' : 'flex-row'} gap-2`}>
+              <div className={`${isMobile ? 'w-full' : 'w-40'}`}>
                 <Select 
                   value={sportFilter} 
                   onValueChange={setSportFilter}
@@ -110,14 +118,16 @@ const Leaderboards = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sports</SelectItem>
-                    <SelectItem value="basketball">Basketball</SelectItem>
-                    <SelectItem value="soccer">Soccer</SelectItem>
-                    <SelectItem value="tennis">Tennis</SelectItem>
+                    {allSports.map(sport => (
+                      <SelectItem key={sport} value={sport}>
+                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               
-              <div className="relative w-full md:w-60">
+              <div className={`relative ${isMobile ? 'w-full' : 'w-60'}`}>
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   placeholder="Search players or teams"
@@ -135,7 +145,7 @@ const Leaderboards = () => {
               <TabsTrigger value="teams">Teams</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="players" className="sportyfi-card">
+            <TabsContent value="players" className="sportyfi-card overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -160,8 +170,17 @@ const Leaderboards = () => {
                 </TableHeader>
                 <TableBody>
                   {filterPlayers().map((player) => (
-                    <TableRow key={player.id}>
-                      <TableCell className="font-medium">{player.rank}</TableCell>
+                    <TableRow key={player.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">
+                        {player.rank <= 3 ? (
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full 
+                            ${player.rank === 1 ? 'bg-yellow-100 text-yellow-800' : 
+                              player.rank === 2 ? 'bg-gray-200 text-gray-800' : 
+                              'bg-amber-100 text-amber-800'}`}>
+                            {player.rank}
+                          </span>
+                        ) : player.rank}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Avatar className="h-8 w-8 mr-2">
@@ -190,7 +209,7 @@ const Leaderboards = () => {
               </Table>
             </TabsContent>
             
-            <TabsContent value="teams" className="sportyfi-card">
+            <TabsContent value="teams" className="sportyfi-card overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -209,8 +228,17 @@ const Leaderboards = () => {
                 </TableHeader>
                 <TableBody>
                   {filterTeams().map((team) => (
-                    <TableRow key={team.id}>
-                      <TableCell className="font-medium">{team.rank}</TableCell>
+                    <TableRow key={team.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">
+                        {team.rank <= 3 ? (
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full 
+                            ${team.rank === 1 ? 'bg-yellow-100 text-yellow-800' : 
+                              team.rank === 2 ? 'bg-gray-200 text-gray-800' : 
+                              'bg-amber-100 text-amber-800'}`}>
+                            {team.rank}
+                          </span>
+                        ) : team.rank}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Avatar className="h-8 w-8 mr-2">

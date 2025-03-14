@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -14,6 +15,7 @@ import { CalendarIcon, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 const CreateMatch = () => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const CreateMatch = () => {
     time: '',
     teamSize: '',
     description: '',
+    skillLevel: 'all', // Added skill level field
   });
   
   // Input change handler
@@ -45,7 +48,7 @@ const CreateMatch = () => {
     setFormData(prev => ({ ...prev, date }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check if user is logged in before submitting
@@ -70,15 +73,33 @@ const CreateMatch = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Combine date and time
+      const dateTime = new Date(formData.date!);
+      const [hours, minutes] = formData.time.split(':').map(Number);
+      dateTime.setHours(hours, minutes);
+      
+      // In a real app, we would save to a database
+      // For now, let's just simulate a delay and success
+      setTimeout(() => {
+        setIsSubmitting(false);
+        toast({
+          title: "Match created!",
+          description: "Your match has been successfully created.",
+        });
+        // Navigate to the matches page, showing the newly created match
+        navigate(`/matches?sport=${formData.sport}`);
+      }, 1000);
+      
+    } catch (error) {
       setIsSubmitting(false);
+      console.error("Error creating match:", error);
       toast({
-        title: "Match created!",
-        description: "Your match has been successfully created.",
+        title: "Error",
+        description: "There was an error creating your match. Please try again.",
+        variant: "destructive",
       });
-      navigate('/matches');
-    }, 1500);
+    }
   };
   
   return (
@@ -118,10 +139,11 @@ const CreateMatch = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="basketball">Basketball</SelectItem>
-                  <SelectItem value="soccer">Soccer</SelectItem>
+                  <SelectItem value="football">Football</SelectItem>
                   <SelectItem value="tennis">Tennis</SelectItem>
                   <SelectItem value="volleyball">Volleyball</SelectItem>
-                  <SelectItem value="baseball">Baseball</SelectItem>
+                  <SelectItem value="cricket">Cricket</SelectItem>
+                  <SelectItem value="table tennis">Table Tennis</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -200,6 +222,25 @@ const CreateMatch = () => {
                   <SelectItem value="6">6 players</SelectItem>
                   <SelectItem value="11">11 players</SelectItem>
                   <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Skill Level - Added new field */}
+            <div>
+              <Label htmlFor="skillLevel">Skill Level</Label>
+              <Select 
+                onValueChange={(value) => handleSelectChange('skillLevel', value)}
+                defaultValue="all"
+              >
+                <SelectTrigger id="skillLevel">
+                  <SelectValue placeholder="Select skill level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                  <SelectItem value="all">All Levels Welcome</SelectItem>
                 </SelectContent>
               </Select>
             </div>

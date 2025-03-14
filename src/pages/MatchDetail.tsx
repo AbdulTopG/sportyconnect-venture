@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Share2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MatchDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const MatchDetail = () => {
   const { user } = useAuth();
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
+  const isMobile = useIsMobile();
   
   // In a real app, fetch this from a database based on the ID
   const [match, setMatch] = useState({
@@ -27,6 +29,7 @@ const MatchDetail = () => {
     teamSize: 5,
     availableSlots: 3,
     description: 'Casual basketball game, all skill levels welcome! We play for fun but still competitive.',
+    skillLevel: 'All Levels',
     host: {
       id: 'host123',
       name: 'Alex Johnson',
@@ -37,6 +40,14 @@ const MatchDetail = () => {
       { id: 'user2', name: 'Sara Williams', avatar: '' },
     ]
   });
+
+  // Check if user is already a participant when component mounts
+  useEffect(() => {
+    if (user) {
+      const isParticipant = match.participants.some(p => p.id === user.id);
+      setHasJoined(isParticipant);
+    }
+  }, [user, match.participants]);
 
   const handleJoinMatch = () => {
     if (!user) {
@@ -98,6 +109,25 @@ const MatchDetail = () => {
     }, 1000);
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `${match.sport} Match`,
+        text: `Join me for a ${match.sport} match at ${match.location}!`,
+        url: window.location.href,
+      })
+      .then(() => console.log('Successful share'))
+      .catch((error) => console.log('Error sharing:', error));
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Share it with your friends to invite them.",
+      });
+    }
+  };
+
   if (!match) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -113,6 +143,7 @@ const MatchDetail = () => {
   // Check if current user is already a participant
   const userIsParticipant = user && match.participants.some(p => p.id === user.id);
   const matchIsFull = match.availableSlots === 0;
+  const isHost = user && user.id === match.host.id;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -152,6 +183,11 @@ const MatchDetail = () => {
               
               <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">About this match</h2>
+                <div className="mb-2">
+                  <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
+                    {match.skillLevel}
+                  </span>
+                </div>
                 <p className="text-gray-700">{match.description}</p>
               </div>
               
@@ -165,24 +201,35 @@ const MatchDetail = () => {
                 </p>
               </div>
               
-              {userIsParticipant ? (
+              <div className="flex flex-col sm:flex-row gap-4">
+                {userIsParticipant ? (
+                  <Button 
+                    onClick={handleLeaveMatch}
+                    disabled={isJoining}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    {isJoining ? "Processing..." : "Leave Match"}
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleJoinMatch}
+                    disabled={isJoining || matchIsFull || isHost}
+                    className={`w-full ${!matchIsFull && !isHost ? "bg-sportyfi-orange hover:bg-red-600 text-white" : ""}`}
+                  >
+                    {isJoining ? "Joining..." : isHost ? "You're the host" : matchIsFull ? "Match Full" : "Join This Match"}
+                  </Button>
+                )}
+                
                 <Button 
-                  onClick={handleLeaveMatch}
-                  disabled={isJoining}
-                  variant="destructive"
+                  onClick={handleShare}
+                  variant="outline"
                   className="w-full"
                 >
-                  {isJoining ? "Processing..." : "Leave Match"}
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
                 </Button>
-              ) : (
-                <Button 
-                  onClick={handleJoinMatch}
-                  disabled={isJoining || matchIsFull}
-                  className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
-                >
-                  {isJoining ? "Joining..." : matchIsFull ? "Match Full" : "Join This Match"}
-                </Button>
-              )}
+              </div>
             </div>
             
             {/* Host and Participants */}
