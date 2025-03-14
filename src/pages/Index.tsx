@@ -17,6 +17,10 @@ const Index = () => {
     navigate('/matches');
   };
   
+  const handleHostMatch = () => {
+    navigate('/matches/create');
+  };
+  
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
@@ -38,7 +42,11 @@ const Index = () => {
                 >
                   Find Matches
                 </Button>
-                <Button variant="outline" className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500">
+                <Button 
+                  variant="outline" 
+                  className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500"
+                  onClick={handleHostMatch}
+                >
                   Host a Match
                 </Button>
               </div>
