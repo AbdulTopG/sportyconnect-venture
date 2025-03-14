@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -14,7 +15,16 @@ import { supabase, Match, Participant } from '@/integrations/supabase/client';
 
 type Host = {
   id: string;
+  username?: string;
   email?: string;
+};
+
+// Extend the Participant type to include user profile info we'll fetch
+type ParticipantWithProfile = Participant & {
+  profile?: {
+    username?: string | null;
+    email?: string | null;
+  };
 };
 
 const MatchDetail = () => {
@@ -27,7 +37,7 @@ const MatchDetail = () => {
   const isMobile = useIsMobile();
   
   const [match, setMatch] = useState<Match | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [host, setHost] = useState<Host | null>(null);
   
   // Fetch match details
@@ -67,22 +77,54 @@ const MatchDetail = () => {
         }
         
         console.log("Participants fetched:", participantsData);
-        setParticipants(participantsData);
+        
+        // For each participant, fetch their profile info
+        if (participantsData && participantsData.length > 0) {
+          const enhancedParticipants: ParticipantWithProfile[] = [];
+          
+          for (const participant of participantsData) {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', participant.user_id)
+                .maybeSingle();
+              
+              enhancedParticipants.push({
+                ...participant,
+                profile: {
+                  username: profileData?.username || null,
+                }
+              });
+            } catch (err) {
+              console.error("Error fetching profile for participant:", err);
+              // Still add participant even if profile fetch fails
+              enhancedParticipants.push({
+                ...participant,
+                profile: { username: null }
+              });
+            }
+          }
+          
+          setParticipants(enhancedParticipants);
+        } else {
+          setParticipants([]);
+        }
         
         // Fetch host details
         if (matchData.host_id) {
           const { data: hostData, error: hostError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('username')
             .eq('id', matchData.host_id)
-            .single();
+            .maybeSingle();
           
           if (hostError && hostError.code !== 'PGRST116') { // PGRST116 is "No rows returned" error
             console.error("Error fetching host:", hostError);
           } else if (hostData) {
             setHost({
               id: matchData.host_id,
-              email: hostData.username || undefined
+              username: hostData.username || undefined
             });
           } else {
             // If no profile found, just use the host_id
@@ -162,7 +204,10 @@ const MatchDetail = () => {
         // Add the new participant to the list
         if (data && data[0]) {
           const newParticipant = data[0] as Participant;
-          setParticipants(prev => [...prev, newParticipant]);
+          setParticipants(prev => [...prev, {
+            ...newParticipant,
+            profile: { username: null }
+          }]);
         }
       }
       
@@ -389,10 +434,10 @@ const MatchDetail = () => {
                 <div className="flex items-center">
                   <Avatar className="h-10 w-10 mr-3">
                     <AvatarImage src={''} />
-                    <AvatarFallback>{host?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                    <AvatarFallback>{host?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{host?.email?.split('@')[0] || 'Anonymous Host'}</p>
+                    <p className="font-medium">{host?.username || 'Anonymous Host'}</p>
                     <p className="text-sm text-gray-500">Host</p>
                   </div>
                 </div>
@@ -406,9 +451,9 @@ const MatchDetail = () => {
                       <div key={participant.id} className="flex items-center">
                         <Avatar className="h-10 w-10 mr-3">
                           <AvatarImage src={''} />
-                          <AvatarFallback>{participant.user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                          <AvatarFallback>{participant.profile?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
-                        <p className="font-medium">{participant.user?.email?.split('@')[0] || 'Anonymous User'}</p>
+                        <p className="font-medium">{participant.profile?.username || 'Anonymous User'}</p>
                       </div>
                     ))}
                   </div>

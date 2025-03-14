@@ -31,6 +31,37 @@ const AuthCallback = () => {
         if (data?.session) {
           // Successfully authenticated
           console.log('Auth callback successful, session found');
+          
+          // Check if user profile exists, create if not
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error('Error checking user profile:', profileError);
+          }
+          
+          // If profile doesn't exist, create one
+          if (!profileData) {
+            // Extract username from email (part before @)
+            const username = data.session.user.email?.split('@')[0] || null;
+            
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([{ 
+                id: data.session.user.id,
+                username: username,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }]);
+              
+            if (insertError) {
+              console.error('Error creating user profile:', insertError);
+            }
+          }
+          
           toast({
             title: "Authentication Successful",
             description: "You've been signed in successfully.",

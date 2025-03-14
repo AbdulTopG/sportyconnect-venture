@@ -6,10 +6,20 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://grtqfffyhtblqkcmqifb.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydHFmZmZ5aHRibHFrY21xaWZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5NzU3NDIsImV4cCI6MjA1NzU1MTc0Mn0.14KLFvI6YFvc2DuJ2CSrKVaNlqGyAmJnXrj_1usN69Y";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// Configure the Supabase client with persistence options
+export const supabase = createClient<Database>(
+  SUPABASE_URL, 
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      persistSession: true,
+      storageKey: 'sportyfi-auth-token',
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    }
+  }
+);
 
 // Add custom type helpers
 export type Tables = Database['public']['Tables'];

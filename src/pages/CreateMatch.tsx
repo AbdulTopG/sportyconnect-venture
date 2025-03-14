@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -79,6 +80,17 @@ const CreateMatch = () => {
       const [hours, minutes] = formData.time.split(':').map(Number);
       dateTime.setHours(hours, minutes);
       
+      console.log("Submitting match data:", {
+        sport: formData.sport,
+        location: formData.location,
+        match_time: dateTime.toISOString(),
+        team_size: parseInt(formData.teamSize),
+        available_slots: parseInt(formData.teamSize),
+        skill_level: formData.skillLevel,
+        description: formData.description,
+        host_id: user.id
+      });
+      
       // Store in Supabase
       const { data, error } = await supabase
         .from('matches')
@@ -104,20 +116,35 @@ const CreateMatch = () => {
       console.log("Match created successfully:", data);
       
       setIsSubmitting(false);
+      
+      // Show a more noticeable success message
       toast({
-        title: "Match created!",
-        description: "Your match has been successfully created.",
+        title: "Match created successfully!",
+        description: "Your match has been added to the listings. Redirecting you to matches page.",
+      });
+      
+      // Clear form data
+      setFormData({
+        sport: '',
+        location: '',
+        date: null,
+        time: '',
+        teamSize: '',
+        description: '',
+        skillLevel: 'all',
       });
       
       // Navigate to the matches page, showing the newly created match
-      navigate(`/matches?sport=${formData.sport}`);
+      setTimeout(() => {
+        navigate(`/matches?sport=${formData.sport}`);
+      }, 1500);
       
-    } catch (error) {
+    } catch (error: any) {
       setIsSubmitting(false);
       console.error("Error creating match:", error);
       toast({
         title: "Error",
-        description: "There was an error creating your match. Please try again.",
+        description: error.message || "There was an error creating your match. Please try again.",
         variant: "destructive",
       });
     }
