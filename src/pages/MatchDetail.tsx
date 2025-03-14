@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -11,30 +10,7 @@ import { Calendar, MapPin, Users, Clock, Share2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
-
-type Match = {
-  id: string;
-  sport: string;
-  location: string;
-  match_time: string;
-  team_size: number;
-  available_slots: number;
-  skill_level: string;
-  host_id: string;
-  description?: string;
-};
-
-type Participant = {
-  id: string;
-  match_id: string;
-  user_id: string;
-  created_at: string;
-  user?: {
-    email?: string;
-    id: string;
-  };
-};
+import { supabase, Match, Participant } from '@/integrations/supabase/client';
 
 type Host = {
   id: string;
@@ -76,7 +52,7 @@ const MatchDetail = () => {
           return;
         }
         
-        setMatch(matchData as Match);
+        setMatch(matchData);
         
         // Fetch participants
         const { data: participantsData, error: participantsError } = await supabase
@@ -91,7 +67,7 @@ const MatchDetail = () => {
         }
         
         console.log("Participants fetched:", participantsData);
-        setParticipants(participantsData as Participant[]);
+        setParticipants(participantsData);
         
         // Fetch host details
         if (matchData.host_id) {
@@ -184,18 +160,10 @@ const MatchDetail = () => {
         } : null);
         
         // Add the new participant to the list
-        const newParticipant: Participant = {
-          id: data[0].id,
-          match_id: match.id,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          user: {
-            id: user.id,
-            email: user.email
-          }
-        };
-        
-        setParticipants(prev => [...prev, newParticipant]);
+        if (data && data[0]) {
+          const newParticipant = data[0] as Participant;
+          setParticipants(prev => [...prev, newParticipant]);
+        }
       }
       
       toast({

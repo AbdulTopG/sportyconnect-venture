@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
@@ -10,19 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Calendar, MapPin, Users, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
-
-type Match = {
-  id: string;
-  sport: string;
-  location: string;
-  match_time: string;
-  team_size: number;
-  available_slots: number;
-  skill_level: string;
-  host_id: string;
-  description?: string;
-};
+import { supabase, Match } from '@/integrations/supabase/client';
 
 const Matches = () => {
   const navigate = useNavigate();
@@ -69,7 +56,7 @@ const Matches = () => {
         }
         
         console.log("Matches fetched:", data);
-        setMatches(data as Match[]);
+        setMatches(data || []);
       } catch (err) {
         console.error("Unexpected error fetching matches:", err);
         setError("An unexpected error occurred. Please try again.");

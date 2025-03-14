@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      matches: {
+        Row: {
+          available_slots: number
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          location: string
+          match_time: string
+          skill_level: string
+          sport: string
+          team_size: number
+        }
+        Insert: {
+          available_slots: number
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          location: string
+          match_time: string
+          skill_level?: string
+          sport: string
+          team_size: number
+        }
+        Update: {
+          available_slots?: number
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          location?: string
+          match_time?: string
+          skill_level?: string
+          sport?: string
+          team_size?: number
+        }
+        Relationships: []
+      }
+      participants: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participants_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
