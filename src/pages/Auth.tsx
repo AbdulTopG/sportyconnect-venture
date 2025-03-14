@@ -1,19 +1,28 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Apple, ArrowRight, Check, Loader2, Phone } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 
 const Auth = () => {
-  const { user, signIn, signUp, isLoading } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, signInWithApple, signInWithPhone, verifyOtp, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('signin');
+  const [activeTab, setActiveTab] = useState(tabParam === 'signup' ? 'signup' : 'signin');
+  const [showOtpInput, setShowOtpInput] = useState(false);
 
   // Redirect if user is already logged in
   if (user) {
@@ -29,6 +38,26 @@ const Auth = () => {
         await signIn(email, password);
       } else {
         await signUp(email, password);
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
+    }
+  };
+
+  const handlePhoneAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      if (!showOtpInput) {
+        await signInWithPhone(phone);
+        setShowOtpInput(true);
+      } else {
+        await verifyOtp(phone, otp);
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -105,9 +134,115 @@ const Auth = () => {
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
                 disabled={isLoading}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign in'
+                )}
               </Button>
             </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => signInWithGoogle()}
+                  disabled={isLoading}
+                >
+                  <FcGoogle className="mr-2 h-5 w-5" />
+                  Google
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => signInWithApple()}
+                  disabled={isLoading}
+                >
+                  <Apple className="mr-2 h-5 w-5" />
+                  Apple
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or use phone
+                  </span>
+                </div>
+              </div>
+
+              <form className="mt-6 space-y-4" onSubmit={handlePhoneAuth}>
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="mt-1"
+                    placeholder="+1234567890"
+                    disabled={showOtpInput && isLoading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Include your country code (e.g., +1 for US)</p>
+                </div>
+
+                {showOtpInput && (
+                  <div>
+                    <Label htmlFor="otp">Verification Code</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="mt-1"
+                      placeholder="123456"
+                    />
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="w-full flex items-center justify-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {showOtpInput ? 'Verifying...' : 'Sending code...'}
+                    </>
+                  ) : (
+                    <>
+                      <Phone className="mr-2 h-4 w-4" />
+                      {showOtpInput ? 'Verify code' : 'Continue with phone'}
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
 
           <TabsContent value="signup" className="mt-6">
@@ -151,9 +286,51 @@ const Auth = () => {
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Create account'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Create account'
+                )}
               </Button>
             </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => signInWithGoogle()}
+                  disabled={isLoading}
+                >
+                  <FcGoogle className="mr-2 h-5 w-5" />
+                  Google
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => signInWithApple()}
+                  disabled={isLoading}
+                >
+                  <Apple className="mr-2 h-5 w-5" />
+                  Apple
+                </Button>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
