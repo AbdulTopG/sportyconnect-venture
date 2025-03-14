@@ -7,9 +7,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Calendar, MapPin, Users, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+
+type Match = {
+  id: string;
+  sport: string;
+  location: string;
+  match_time: string;
+  team_size: number;
+  available_slots: number;
+  skill_level: string;
+  host_id: string;
+  description?: string;
+};
 
 const Matches = () => {
   const navigate = useNavigate();
@@ -17,6 +30,9 @@ const Matches = () => {
   const { user } = useAuth();
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Extract sport from URL query parameters when component mounts
   useEffect(() => {
@@ -26,6 +42,44 @@ const Matches = () => {
       setSelectedSport(sportParam);
     }
   }, [location.search]);
+
+  // Fetch matches from Supabase
+  useEffect(() => {
+    const fetchMatches = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        let query = supabase.from('matches').select('*');
+        
+        // Apply sport filter if selected
+        if (selectedSport) {
+          query = query.eq('sport', selectedSport);
+        }
+        
+        // Sort by match time, most recent first
+        query = query.order('match_time', { ascending: true });
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching matches:", error);
+          setError("Failed to load matches. Please try again.");
+          return;
+        }
+        
+        console.log("Matches fetched:", data);
+        setMatches(data as Match[]);
+      } catch (err) {
+        console.error("Unexpected error fetching matches:", err);
+        setError("An unexpected error occurred. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMatches();
+  }, [selectedSport]);
 
   const handleCreateMatch = () => {
     if (!user) {
@@ -41,76 +95,13 @@ const Matches = () => {
     navigate('/matches/create');
   };
 
-  // Placeholder matches data
-  const allMatches = [
-    {
-      id: '1',
-      sport: 'basketball',
-      location: 'Central Park Courts',
-      date: '2023-07-15T18:00:00',
-      teamSize: 5,
-      availableSlots: 3,
-      skillLevel: 'All Levels',
-    },
-    {
-      id: '2',
-      sport: 'football',
-      location: 'Riverside Fields',
-      date: '2023-07-16T17:30:00',
-      teamSize: 11,
-      availableSlots: 5,
-      skillLevel: 'Intermediate',
-    },
-    {
-      id: '3',
-      sport: 'tennis',
-      location: 'Metro Tennis Club',
-      date: '2023-07-14T09:00:00',
-      teamSize: 2,
-      availableSlots: 1,
-      skillLevel: 'Advanced',
-    },
-    {
-      id: '4',
-      sport: 'cricket',
-      location: 'Cricket Ground',
-      date: '2023-07-18T14:00:00',
-      teamSize: 11,
-      availableSlots: 3,
-      skillLevel: 'Beginner',
-    },
-    {
-      id: '5',
-      sport: 'volleyball',
-      location: 'Beach Courts',
-      date: '2023-07-19T16:00:00',
-      teamSize: 6,
-      availableSlots: 2,
-      skillLevel: 'Intermediate',
-    },
-    {
-      id: '6',
-      sport: 'table tennis',
-      location: 'Community Center',
-      date: '2023-07-20T18:30:00',
-      teamSize: 2,
-      availableSlots: 1,
-      skillLevel: 'All Levels',
-    },
-  ];
-
-  // Filter matches based on selected sport
-  const filteredMatches = selectedSport 
-    ? allMatches.filter(match => match.sport === selectedSport.toLowerCase())
-    : allMatches;
+  // Extract unique sports from the matches for filtering
+  const allSports = Array.from(new Set(matches.map(match => match.sport)));
 
   const clearFilter = () => {
     setSelectedSport(null);
     navigate('/matches');
   };
-
-  // All available sports for filtering
-  const allSports = Array.from(new Set(allMatches.map(match => match.sport)));
 
   const handleSportChange = (sport: string) => {
     if (sport === 'all') {
@@ -177,23 +168,39 @@ const Matches = () => {
             </div>
           </div>
           
-          {filteredMatches.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-gray-500">Loading matches...</p>
+              </div>
+            </div>
+          ) : error ? (
             <div className="text-center py-12">
-              <h2 className="text-xl font-medium mb-4">No matches found for {selectedSport}</h2>
+              <h2 className="text-xl font-medium mb-4 text-red-600">{error}</h2>
+              <Button onClick={() => window.location.reload()} className="mr-4">Try Again</Button>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-medium mb-4">
+                {selectedSport 
+                  ? `No matches found for ${selectedSport}` 
+                  : "No matches found"}
+              </h2>
               <p className="mb-6">Try selecting a different sport or host a match yourself!</p>
-              <Button onClick={clearFilter} className="mr-4">View All Matches</Button>
+              {selectedSport && <Button onClick={clearFilter} className="mr-4">View All Matches</Button>}
               <Button onClick={handleCreateMatch} className="bg-sportyfi-orange hover:bg-red-600">Host a Match</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMatches.map((match) => (
+              {matches.map((match) => (
                 <div key={match.id} className="sportyfi-card hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold">
                       {match.sport.charAt(0).toUpperCase() + match.sport.slice(1)}
                     </h3>
-                    <Badge className={`${match.availableSlots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
-                      {match.availableSlots > 0 ? `${match.availableSlots} spots left` : 'Full'}
+                    <Badge className={`${match.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
+                      {match.available_slots > 0 ? `${match.available_slots} spots left` : 'Full'}
                     </Badge>
                   </div>
                   <div className="space-y-2 mb-4">
@@ -203,14 +210,14 @@ const Matches = () => {
                     </p>
                     <p className="text-gray-700 flex items-center">
                       <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-                      {new Date(match.date).toLocaleString(undefined, {
+                      {new Date(match.match_time).toLocaleString(undefined, {
                         dateStyle: 'medium',
                         timeStyle: 'short'
                       })}
                     </p>
                     <p className="text-gray-700 flex items-center">
                       <Users className="h-4 w-4 mr-1 text-gray-500" />
-                      {match.teamSize} players ({match.skillLevel})
+                      {match.team_size} players ({match.skill_level})
                     </p>
                   </div>
                   <Button 

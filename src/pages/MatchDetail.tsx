@@ -7,49 +7,131 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Share2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+
+type Match = {
+  id: string;
+  sport: string;
+  location: string;
+  match_time: string;
+  team_size: number;
+  available_slots: number;
+  skill_level: string;
+  host_id: string;
+  description?: string;
+};
+
+type Participant = {
+  id: string;
+  match_id: string;
+  user_id: string;
+  created_at: string;
+  user?: {
+    email?: string;
+    id: string;
+  };
+};
+
+type Host = {
+  id: string;
+  email?: string;
+};
 
 const MatchDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isJoining, setIsJoining] = useState(false);
-  const [hasJoined, setHasJoined] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  // In a real app, fetch this from a database based on the ID
-  const [match, setMatch] = useState({
-    id,
-    sport: 'Basketball',
-    location: 'Central Park Courts',
-    date: '2023-07-15T18:00:00',
-    teamSize: 5,
-    availableSlots: 3,
-    description: 'Casual basketball game, all skill levels welcome! We play for fun but still competitive.',
-    skillLevel: 'All Levels',
-    host: {
-      id: 'host123',
-      name: 'Alex Johnson',
-      avatar: '',
-    },
-    participants: [
-      { id: 'user1', name: 'Michael Scott', avatar: '' },
-      { id: 'user2', name: 'Sara Williams', avatar: '' },
-    ]
-  });
-
-  // Check if user is already a participant when component mounts
+  const [match, setMatch] = useState<Match | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [host, setHost] = useState<Host | null>(null);
+  
+  // Fetch match details
   useEffect(() => {
-    if (user) {
-      const isParticipant = match.participants.some(p => p.id === user.id);
-      setHasJoined(isParticipant);
-    }
-  }, [user, match.participants]);
+    const fetchMatchDetails = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch match
+        const { data: matchData, error: matchError } = await supabase
+          .from('matches')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (matchError) {
+          console.error("Error fetching match:", matchError);
+          setError("Failed to load match details. Please try again.");
+          return;
+        }
+        
+        setMatch(matchData as Match);
+        
+        // Fetch participants
+        const { data: participantsData, error: participantsError } = await supabase
+          .from('participants')
+          .select('*')
+          .eq('match_id', id);
+        
+        if (participantsError) {
+          console.error("Error fetching participants:", participantsError);
+          setError("Failed to load participants. Please try again.");
+          return;
+        }
+        
+        console.log("Participants fetched:", participantsData);
+        setParticipants(participantsData as Participant[]);
+        
+        // Fetch host details
+        if (matchData.host_id) {
+          const { data: hostData, error: hostError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', matchData.host_id)
+            .single();
+          
+          if (hostError && hostError.code !== 'PGRST116') { // PGRST116 is "No rows returned" error
+            console.error("Error fetching host:", hostError);
+          } else if (hostData) {
+            setHost({
+              id: matchData.host_id,
+              email: hostData.username || undefined
+            });
+          } else {
+            // If no profile found, just use the host_id
+            setHost({
+              id: matchData.host_id
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Unexpected error fetching match details:", err);
+        setError("An unexpected error occurred. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMatchDetails();
+  }, [id]);
 
-  const handleJoinMatch = () => {
+  // Check if user is already a participant
+  const userIsParticipant = user && participants.some(p => p.user_id === user.id);
+  const matchIsFull = match?.available_slots === 0;
+  const isHost = user && match && user.id === match.host_id;
+
+  const handleJoinMatch = async () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -60,60 +142,142 @@ const MatchDetail = () => {
       return;
     }
     
+    if (!match) return;
+    
     setIsJoining(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsJoining(false);
-      setHasJoined(true);
+    try {
+      // Insert participant record
+      const { data, error } = await supabase
+        .from('participants')
+        .insert([
+          { match_id: match.id, user_id: user.id }
+        ])
+        .select();
       
-      // Update local state to reflect the joined status
-      setMatch(prev => ({
-        ...prev,
-        availableSlots: prev.availableSlots - 1,
-        participants: [
-          ...prev.participants, 
-          { id: user.id, name: user.email?.split('@')[0] || 'Anonymous User', avatar: '' }
-        ]
-      }));
+      if (error) {
+        console.error("Error joining match:", error);
+        throw error;
+      }
+      
+      console.log("Successfully joined match:", data);
+      
+      // Update match available slots
+      const { error: updateError } = await supabase
+        .from('matches')
+        .update({ available_slots: match.available_slots - 1 })
+        .eq('id', match.id);
+      
+      if (updateError) {
+        console.error("Error updating match slots:", updateError);
+        // Don't throw here, the user has already joined
+        toast({
+          title: "Warning",
+          description: "You've joined the match, but there was an issue updating the available slots.",
+          variant: "destructive",
+        });
+      } else {
+        // Update local state
+        setMatch(prev => prev ? {
+          ...prev,
+          available_slots: prev.available_slots - 1
+        } : null);
+        
+        // Add the new participant to the list
+        const newParticipant: Participant = {
+          id: data[0].id,
+          match_id: match.id,
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          user: {
+            id: user.id,
+            email: user.email
+          }
+        };
+        
+        setParticipants(prev => [...prev, newParticipant]);
+      }
       
       toast({
         title: "Success!",
         description: "You've joined the match. See you there!",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error("Error joining match:", error);
+      toast({
+        title: "Error",
+        description: error.message || "There was an error joining the match. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsJoining(false);
+    }
   };
 
-  const handleLeaveMatch = () => {
+  const handleLeaveMatch = async () => {
+    if (!user || !match) return;
+    
     setIsJoining(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsJoining(false);
-      setHasJoined(false);
+    try {
+      // Delete participant record
+      const { error } = await supabase
+        .from('participants')
+        .delete()
+        .eq('match_id', match.id)
+        .eq('user_id', user.id);
       
-      // Update local state to reflect the left status
-      setMatch(prev => {
-        const updatedParticipants = prev.participants.filter(p => p.id !== user?.id);
-        return {
+      if (error) {
+        console.error("Error leaving match:", error);
+        throw error;
+      }
+      
+      // Update match available slots
+      const { error: updateError } = await supabase
+        .from('matches')
+        .update({ available_slots: match.available_slots + 1 })
+        .eq('id', match.id);
+      
+      if (updateError) {
+        console.error("Error updating match slots:", updateError);
+        // Don't throw here, the user has already left
+        toast({
+          title: "Warning",
+          description: "You've left the match, but there was an issue updating the available slots.",
+          variant: "destructive",
+        });
+      } else {
+        // Update local state
+        setMatch(prev => prev ? {
           ...prev,
-          availableSlots: prev.availableSlots + 1,
-          participants: updatedParticipants
-        };
-      });
+          available_slots: prev.available_slots + 1
+        } : null);
+        
+        // Remove the participant from the list
+        setParticipants(prev => prev.filter(p => p.user_id !== user.id));
+      }
       
       toast({
         title: "You've left the match",
         description: "You are no longer participating in this match.",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error("Error leaving match:", error);
+      toast({
+        title: "Error",
+        description: error.message || "There was an error leaving the match. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: `${match.sport} Match`,
-        text: `Join me for a ${match.sport} match at ${match.location}!`,
+        title: `${match?.sport} Match`,
+        text: `Join me for a ${match?.sport} match at ${match?.location}!`,
         url: window.location.href,
       })
       .then(() => console.log('Successful share'))
@@ -128,22 +292,40 @@ const MatchDetail = () => {
     }
   };
 
-  if (!match) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <SportyFiHeader />
         <main className="flex-grow flex items-center justify-center">
-          <p className="text-xl">Match not found</p>
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-xl">Loading match details...</p>
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
 
-  // Check if current user is already a participant
-  const userIsParticipant = user && match.participants.some(p => p.id === user.id);
-  const matchIsFull = match.availableSlots === 0;
-  const isHost = user && user.id === match.host.id;
+  if (error || !match) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SportyFiHeader />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl text-red-600">{error || "Match not found"}</p>
+            <Button 
+              className="mt-4"
+              onClick={() => navigate('/matches')}
+            >
+              Back to Matches
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -156,7 +338,7 @@ const MatchDetail = () => {
             <div className="lg:col-span-2 sportyfi-card">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-2xl font-bold mb-2">{match.sport} Match</h1>
+                  <h1 className="text-2xl font-bold mb-2">{match.sport.charAt(0).toUpperCase() + match.sport.slice(1)} Match</h1>
                   <div className="flex items-center text-gray-600 mb-1">
                     <MapPin className="h-4 w-4 mr-1" />
                     <span>{match.location}</span>
@@ -164,17 +346,17 @@ const MatchDetail = () => {
                   <div className="flex flex-wrap items-center text-gray-600 gap-2">
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span>{new Date(match.date).toLocaleDateString()}</span>
+                      <span>{new Date(match.match_time).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 ml-0 mr-1" />
-                      <span>{new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>{new Date(match.match_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </div>
                 </div>
-                <Badge className={match.availableSlots > 0 ? "bg-green-500" : "bg-red-500"}>
-                  {match.availableSlots > 0 
-                    ? `${match.availableSlots} spots left` 
+                <Badge className={match.available_slots > 0 ? "bg-green-500" : "bg-red-500"}>
+                  {match.available_slots > 0 
+                    ? `${match.available_slots} spots left` 
                     : "Match Full"}
                 </Badge>
               </div>
@@ -185,19 +367,19 @@ const MatchDetail = () => {
                 <h2 className="text-lg font-semibold mb-2">About this match</h2>
                 <div className="mb-2">
                   <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
-                    {match.skillLevel}
+                    {match.skill_level}
                   </span>
                 </div>
-                <p className="text-gray-700">{match.description}</p>
+                <p className="text-gray-700">{match.description || "No description provided."}</p>
               </div>
               
               <div className="mb-6">
                 <div className="flex items-center mb-2">
                   <Users className="h-5 w-5 mr-2" />
-                  <h2 className="text-lg font-semibold">Team Size: {match.teamSize} players</h2>
+                  <h2 className="text-lg font-semibold">Team Size: {match.team_size} players</h2>
                 </div>
                 <p className="text-gray-700">
-                  {match.teamSize - match.availableSlots} joined, {match.availableSlots} spots remaining
+                  {match.team_size - match.available_slots} joined, {match.available_slots} spots remaining
                 </p>
               </div>
               
@@ -238,27 +420,27 @@ const MatchDetail = () => {
                 <h2 className="text-lg font-semibold mb-4">Host</h2>
                 <div className="flex items-center">
                   <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src={match.host.avatar} />
-                    <AvatarFallback>{match.host.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={''} />
+                    <AvatarFallback>{host?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{match.host.name}</p>
+                    <p className="font-medium">{host?.email?.split('@')[0] || 'Anonymous Host'}</p>
                     <p className="text-sm text-gray-500">Host</p>
                   </div>
                 </div>
               </div>
               
               <div className="sportyfi-card">
-                <h2 className="text-lg font-semibold mb-4">Participants ({match.participants.length})</h2>
-                {match.participants.length > 0 ? (
+                <h2 className="text-lg font-semibold mb-4">Participants ({participants.length})</h2>
+                {participants.length > 0 ? (
                   <div className="space-y-3">
-                    {match.participants.map(participant => (
+                    {participants.map(participant => (
                       <div key={participant.id} className="flex items-center">
                         <Avatar className="h-10 w-10 mr-3">
-                          <AvatarImage src={participant.avatar} />
-                          <AvatarFallback>{participant.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={''} />
+                          <AvatarFallback>{participant.user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
-                        <p className="font-medium">{participant.name}</p>
+                        <p className="font-medium">{participant.user?.email?.split('@')[0] || 'Anonymous User'}</p>
                       </div>
                     ))}
                   </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -29,7 +28,7 @@ const CreateMatch = () => {
     time: '',
     teamSize: '',
     description: '',
-    skillLevel: 'all', // Added skill level field
+    skillLevel: 'all',
   });
   
   // Input change handler
@@ -58,6 +57,7 @@ const CreateMatch = () => {
         description: "Please log in to create a match",
         variant: "destructive",
       });
+      navigate('/auth');
       return;
     }
     
@@ -79,17 +79,38 @@ const CreateMatch = () => {
       const [hours, minutes] = formData.time.split(':').map(Number);
       dateTime.setHours(hours, minutes);
       
-      // In a real app, we would save to a database
-      // For now, let's just simulate a delay and success
-      setTimeout(() => {
-        setIsSubmitting(false);
-        toast({
-          title: "Match created!",
-          description: "Your match has been successfully created.",
-        });
-        // Navigate to the matches page, showing the newly created match
-        navigate(`/matches?sport=${formData.sport}`);
-      }, 1000);
+      // Store in Supabase
+      const { data, error } = await supabase
+        .from('matches')
+        .insert([
+          {
+            sport: formData.sport,
+            location: formData.location,
+            match_time: dateTime.toISOString(),
+            team_size: parseInt(formData.teamSize),
+            available_slots: parseInt(formData.teamSize),
+            skill_level: formData.skillLevel,
+            description: formData.description,
+            host_id: user.id
+          }
+        ])
+        .select();
+      
+      if (error) {
+        console.error("Error creating match:", error);
+        throw error;
+      }
+      
+      console.log("Match created successfully:", data);
+      
+      setIsSubmitting(false);
+      toast({
+        title: "Match created!",
+        description: "Your match has been successfully created.",
+      });
+      
+      // Navigate to the matches page, showing the newly created match
+      navigate(`/matches?sport=${formData.sport}`);
       
     } catch (error) {
       setIsSubmitting(false);
@@ -226,7 +247,7 @@ const CreateMatch = () => {
               </Select>
             </div>
             
-            {/* Skill Level - Added new field */}
+            {/* Skill Level */}
             <div>
               <Label htmlFor="skillLevel">Skill Level</Label>
               <Select 
