@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useVenues } from '@/hooks/use-venues';
+import { useVenues, dummyVenues } from '@/hooks/use-venues';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import VenueCard from '@/components/venues/VenueCard';
@@ -56,10 +56,13 @@ const Venues = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
   
+  // Get venues to display - use real venues or dummy venues if none are found
+  const venuesToDisplay = venues.length > 0 ? venues : dummyVenues;
+  
   // Calculate pagination
-  const totalPages = Math.ceil(venues.length / itemsPerPage);
+  const totalPages = Math.ceil(venuesToDisplay.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedVenues = venues.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedVenues = venuesToDisplay.slice(startIndex, startIndex + itemsPerPage);
   
   // Generate pagination items
   const renderPaginationItems = () => {
@@ -178,22 +181,20 @@ const Venues = () => {
               </Alert>
             )}
             
-            {!isLoading && !error && paginatedVenues.length === 0 && (
+            {!isLoading && !error && venues.length === 0 && (
               <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">No venues found</h3>
-                <p className="text-muted-foreground mb-6">Try adjusting your filters or search criteria</p>
-                <Button variant="outline" onClick={() => handleFilterChange({
-                  searchQuery: '',
-                  sport: 'All Sports',
-                  location: 'All Locations',
-                  priceRange: [0, 5000],
-                })}>
-                  Reset Filters
-                </Button>
+                <h3 className="text-lg font-semibold mb-2">Showing sample venues</h3>
+                <p className="text-muted-foreground mb-6">No real venues found with your current filters. Here are some sample venues:</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+                  {dummyVenues.map((venue) => (
+                    <VenueCard key={venue.id} venue={venue} />
+                  ))}
+                </div>
               </div>
             )}
             
-            {!isLoading && !error && paginatedVenues.length > 0 && (
+            {!isLoading && !error && venues.length > 0 && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {paginatedVenues.map((venue) => (
