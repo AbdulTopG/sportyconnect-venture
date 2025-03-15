@@ -27,3 +27,18 @@ export type Match = Tables['matches']['Row'];
 export type Participant = Tables['participants']['Row'];
 export type Profile = Tables['profiles']['Row'];
 export type ParticipantWithProfile = Participant & { profile: Profile | null };
+
+// Add new type helpers for venues and bookings
+export type Venue = Tables['venues']['Row'];
+export type VenueSport = Tables['venue_sports']['Row'];
+export type VenueAmenity = Tables['venue_amenities']['Row'];
+export type VenueImage = Tables['venue_images']['Row'];
+export type Booking = Tables['bookings']['Row'];
+export type VenueRequest = Tables['venue_requests']['Row'];
+
+// Complete venue type with relations
+export type VenueWithRelations = Venue & {
+  sports?: VenueSport[];
+  amenities?: VenueAmenity[];
+  images?: VenueImage[];
+};

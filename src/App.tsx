@@ -18,6 +18,10 @@ import Leaderboards from "./pages/Leaderboards";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Venues from "./pages/Venues";
+import VenueDetail from "./pages/VenueDetail";
+import RequestVenue from "./pages/RequestVenue";
+import Bookings from "./pages/Bookings";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +45,10 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/venues" element={<Venues />} />
+            <Route path="/venues/:id" element={<VenueDetail />} />
+            <Route path="/venues/request" element={<RequestVenue />} />
+            <Route path="/bookings" element={<Bookings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

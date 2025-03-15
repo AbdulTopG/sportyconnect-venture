@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          start_time: string
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          start_time: string
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          start_time?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           available_slots: number
@@ -98,6 +148,192 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      venue_amenities: {
+        Row: {
+          amenity: string
+          created_at: string
+          id: string
+          venue_id: string
+        }
+        Insert: {
+          amenity: string
+          created_at?: string
+          id?: string
+          venue_id: string
+        }
+        Update: {
+          amenity?: string
+          created_at?: string
+          id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_amenities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_images_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_requests: {
+        Row: {
+          amenities: string[]
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          description: string | null
+          id: string
+          location: string
+          name: string
+          owner_id: string
+          price_per_hour: number
+          sports: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amenities: string[]
+          contact_email: string
+          contact_phone: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location: string
+          name: string
+          owner_id: string
+          price_per_hour: number
+          sports: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[]
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string
+          name?: string
+          owner_id?: string
+          price_per_hour?: number
+          sports?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      venue_sports: {
+        Row: {
+          created_at: string
+          id: string
+          sport: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sport: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sport?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_sports_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_verified: boolean
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name: string
+          owner_id: string | null
+          price_per_hour: number
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name: string
+          owner_id?: string | null
+          price_per_hour: number
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          owner_id?: string | null
+          price_per_hour?: number
+          updated_at?: string
         }
         Relationships: []
       }
