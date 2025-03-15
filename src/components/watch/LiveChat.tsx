@@ -120,6 +120,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
   }, [chatMessages]);
   
   useEffect(() => {
+    // Fix potential memory leak by cleaning up interval
     const interval = setInterval(() => {
       const newMessage: ChatMessage = {
         id: `msg-${Date.now()}`,
@@ -147,6 +148,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
       setConnectedUsers(prev => prev + (Math.random() > 0.5 ? 1 : -1));
     }, 10000);
     
+    // Important: Clear interval on component unmount
     return () => clearInterval(interval);
   }, []);
   

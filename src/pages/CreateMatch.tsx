@@ -123,6 +123,9 @@ const CreateMatch = () => {
         description: "Your match has been added to the listings. Redirecting you to matches page.",
       });
       
+      // Save current form data to use in navigation
+      const sportFilter = formData.sport;
+      
       // Clear form data
       setFormData({
         sport: '',
@@ -136,7 +139,7 @@ const CreateMatch = () => {
       
       // Navigate to the matches page, showing the newly created match
       setTimeout(() => {
-        navigate(`/matches?sport=${formData.sport}`);
+        navigate(`/matches?sport=${sportFilter}`);
       }, 1500);
       
     } catch (error: any) {
