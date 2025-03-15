@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,27 +8,21 @@ import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
 import { Volleyball, Table, Dice6, Map } from 'lucide-react';
-
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
   const navigate = useNavigate();
-  
   const handleFindMatches = () => {
     navigate('/matches');
   };
-  
   const handleHostMatch = () => {
     navigate('/matches/create');
   };
-
   const handleGroundsBooking = () => {
     navigate('/venues');
   };
-
   const handleSportCardClick = (sport: string) => {
     navigate(`/matches?sport=${sport.toLowerCase()}`);
   };
-  
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
@@ -45,24 +38,13 @@ const Index = () => {
                 The ultimate platform to find local sports matches, showcase your skills, and compete in official tournaments.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button 
-                  className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg"
-                  onClick={handleFindMatches}
-                >
+                <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg" onClick={handleFindMatches}>
                   Find Matches
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500"
-                  onClick={handleHostMatch}
-                >
+                <Button variant="outline" className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500" onClick={handleHostMatch}>
                   Host a Match
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="border-white text-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2"
-                  onClick={handleGroundsBooking}
-                >
+                <Button variant="outline" onClick={handleGroundsBooking} className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-red-600 hover:bg-red-500">
                   <Map size={20} />
                   Grounds Booking
                 </Button>
@@ -77,12 +59,7 @@ const Index = () => {
           <div className="sportyfi-container">
             <h2 className="text-3xl font-bold mb-8 text-center">Popular Sports</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Snooker', 'Table Tennis'].map(sport => (
-                <Card 
-                  key={sport} 
-                  className="sportyfi-card overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => handleSportCardClick(sport)}
-                >
+              {['Football', 'Cricket', 'Basketball', 'Tennis', 'Kabaddi', 'Volleyball', 'Snooker', 'Table Tennis'].map(sport => <Card key={sport} className="sportyfi-card overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleSportCardClick(sport)}>
                   <CardContent className="p-0">
                     <div className="aspect-square bg-muted relative">
                       <AspectRatio ratio={1} className="w-full h-full">
@@ -103,8 +80,7 @@ const Index = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </section>
