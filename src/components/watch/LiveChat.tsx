@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { SendHorizontal, MessageSquare, BarChart3, ThumbsUp, ThumbsDown, Heart, Fire, Zap } from 'lucide-react';
+import { SendHorizontal, MessageSquare, BarChart3, ThumbsUp, ThumbsDown, Heart, Flame, Zap } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -25,7 +24,6 @@ interface LiveChatProps {
   onSendMessage: (message: string) => void;
 }
 
-// Dummy data
 const dummyChatMessages: ChatMessage[] = [
   {
     id: '1',
@@ -96,7 +94,6 @@ const dummyChatMessages: ChatMessage[] = [
   },
 ];
 
-// Poll data
 const pollData = {
   question: 'Who will win this match?',
   options: [
@@ -117,12 +114,10 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
   
-  // Simulate new messages coming in
   useEffect(() => {
     const interval = setInterval(() => {
       const newMessage: ChatMessage = {
@@ -148,9 +143,8 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
       
       setChatMessages(prev => [...prev, newMessage]);
       
-      // Randomly update connected users
       setConnectedUsers(prev => prev + (Math.random() > 0.5 ? 1 : -1));
-    }, 10000); // New message every 10 seconds
+    }, 10000);
     
     return () => clearInterval(interval);
   }, []);
@@ -159,7 +153,6 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
     e.preventDefault();
     if (!message.trim()) return;
     
-    // Add the new message
     const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       user: {
@@ -305,7 +298,7 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
               <span className="text-xs">324</span>
             </Button>
             <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <Fire className="h-6 w-6 mb-1 text-orange-500" />
+              <Flame className="h-6 w-6 mb-1 text-orange-500" />
               <span className="text-xs">278</span>
             </Button>
             <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
