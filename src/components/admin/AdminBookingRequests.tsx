@@ -12,11 +12,7 @@ import {
 } from '@/components/ui/table';
 import { 
   Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+  CardContent
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +68,8 @@ const AdminBookingRequests = () => {
       if (error) throw error;
 
       if (data) {
-        setBookingRequests(data as BookingRequest[]);
+        // Use type assertion to fix the TypeScript error
+        setBookingRequests(data as unknown as BookingRequest[]);
       }
     } catch (error) {
       console.error('Error fetching booking requests:', error);

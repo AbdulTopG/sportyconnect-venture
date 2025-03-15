@@ -1,63 +1,50 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Check, X, MapPin, Phone, Mail, IndianRupee } from 'lucide-react';
-import { format } from 'date-fns';
 
 interface VenueRequest {
   id: string;
   name: string;
   description: string | null;
   location: string;
-  contact_email: string;
-  contact_phone: string;
   price_per_hour: number;
+  contact_phone: string;
+  contact_email: string;
   sports: string[];
   amenities: string[];
+  owner_id: string;
   status: string;
   created_at: string;
-  owner_id: string;
-  owner_name: string | null;
+  updated_at: string;
+  owner?: {
+    username: string | null;
+    email: string | null;
+  };
 }
 
 const AdminVenueRequests = () => {
   const { toast } = useToast();
   const [venueRequests, setVenueRequests] = useState<VenueRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchVenueRequests = async () => {
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('venue_requests')
         .select(`
           *,
-          owner:profiles!owner_id(username)
+          owner:profiles(username)
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Transform the data to match the VenueRequest interface
-      const transformedData = data?.map(item => ({
-        ...item,
-        owner_name: item.owner?.username
-      })) as VenueRequest[];
-
-      setVenueRequests(transformedData || []);
+      
+      setVenueRequests(data as unknown as VenueRequest[]);
+      
     } catch (error) {
       console.error('Error fetching venue requests:', error);
       toast({
@@ -76,9 +63,8 @@ const AdminVenueRequests = () => {
 
   const approveVenueRequest = async (request: VenueRequest) => {
     try {
-      setProcessingIds(prev => new Set(prev).add(request.id));
+      setProcessingId(request.id);
       
-      // First, create a new venue in the venues table
       const { data: venueData, error: venueError } = await supabase
         .from('venues')
         .insert({
@@ -96,7 +82,6 @@ const AdminVenueRequests = () => {
 
       if (venueError) throw venueError;
       
-      // Then, add sports to venue_sports table
       if (request.sports.length > 0) {
         const sportsToInsert = request.sports.map(sport => ({
           venue_id: venueData.id,
@@ -110,7 +95,6 @@ const AdminVenueRequests = () => {
         if (sportsError) throw sportsError;
       }
       
-      // Then, add amenities to venue_amenities table
       if (request.amenities.length > 0) {
         const amenitiesToInsert = request.amenities.map(amenity => ({
           venue_id: venueData.id,
@@ -124,7 +108,6 @@ const AdminVenueRequests = () => {
         if (amenitiesError) throw amenitiesError;
       }
       
-      // Finally, update the request status to 'approved'
       const { error: updateError } = await supabase
         .from('venue_requests')
         .update({ status: 'approved' })
@@ -132,7 +115,6 @@ const AdminVenueRequests = () => {
         
       if (updateError) throw updateError;
 
-      // Update local state
       setVenueRequests(prev => 
         prev.filter(req => req.id !== request.id)
       );
@@ -150,17 +132,13 @@ const AdminVenueRequests = () => {
         variant: 'destructive',
       });
     } finally {
-      setProcessingIds(prev => {
-        const updated = new Set(prev);
-        updated.delete(request.id);
-        return updated;
-      });
+      setProcessingId(null);
     }
   };
 
   const rejectVenueRequest = async (requestId: string) => {
     try {
-      setProcessingIds(prev => new Set(prev).add(requestId));
+      setProcessingId(requestId);
       
       const { error } = await supabase
         .from('venue_requests')
@@ -169,7 +147,6 @@ const AdminVenueRequests = () => {
 
       if (error) throw error;
 
-      // Update local state
       setVenueRequests(prev => 
         prev.filter(req => req.id !== requestId)
       );
@@ -186,11 +163,7 @@ const AdminVenueRequests = () => {
         variant: 'destructive',
       });
     } finally {
-      setProcessingIds(prev => {
-        const updated = new Set(prev);
-        updated.delete(requestId);
-        return updated;
-      });
+      setProcessingId(null);
     }
   };
 
@@ -266,7 +239,7 @@ const AdminVenueRequests = () => {
                 <div>
                   <h4 className="text-sm font-medium mb-1">Requested By</h4>
                   <p className="text-sm text-muted-foreground">
-                    {request.owner_name || 'Unknown User'}
+                    {request.owner?.username || 'Unknown User'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {format(new Date(request.created_at), 'PPP')}
@@ -312,7 +285,7 @@ const AdminVenueRequests = () => {
                   size="sm"
                   className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-600"
                   onClick={() => rejectVenueRequest(request.id)}
-                  disabled={processingIds.has(request.id)}
+                  disabled={processingId === request.id}
                 >
                   <X className="h-4 w-4 mr-2" />
                   Reject
@@ -321,7 +294,7 @@ const AdminVenueRequests = () => {
                   size="sm"
                   className="bg-green-600 hover:bg-green-700"
                   onClick={() => approveVenueRequest(request)}
-                  disabled={processingIds.has(request.id)}
+                  disabled={processingId === request.id}
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Approve

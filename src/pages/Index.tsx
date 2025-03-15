@@ -1,28 +1,48 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
-import { Volleyball, Table, Dice6, Map } from 'lucide-react';
+import { Volleyball, Map } from 'lucide-react';
+
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
   const navigate = useNavigate();
+  
   const handleFindMatches = () => {
     navigate('/matches');
   };
+  
   const handleHostMatch = () => {
     navigate('/matches/create');
   };
+  
   const handleGroundsBooking = () => {
     navigate('/venues');
   };
+  
+  const handleVenueSelect = (venueId: string) => {
+    navigate(`/venues/${venueId}`);
+  };
+  
+  const featuredGrounds = [
+    { id: '1', name: 'Mumbai Football Arena', location: 'Mumbai' },
+    { id: '2', name: 'DY Patil Stadium', location: 'Navi Mumbai' },
+    { id: '3', name: 'Cooperage Ground', location: 'Mumbai' },
+    { id: '4', name: 'Shree Shiv Chhatrapati Sports Complex', location: 'Pune' },
+    { id: '5', name: 'Jawaharlal Nehru Stadium', location: 'Delhi' },
+  ];
+  
   const handleSportCardClick = (sport: string) => {
     navigate(`/matches?sport=${sport.toLowerCase()}`);
   };
+  
   return <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
       
@@ -44,16 +64,50 @@ const Index = () => {
                 <Button variant="outline" onClick={handleHostMatch} className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-sportyfi-orange">
                   Host a Match
                 </Button>
-                <Button variant="outline" onClick={handleGroundsBooking} className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-sportyfi-orange">
-                  <Map size={20} />
-                  Grounds Booking
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-sportyfi-orange">
+                      <Map size={20} />
+                      Grounds Booking
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-0" align="start">
+                    <div className="p-2">
+                      <h3 className="font-medium text-center py-2 border-b">Popular Grounds</h3>
+                      <ul className="mt-2 space-y-1">
+                        {featuredGrounds.map((ground) => (
+                          <li key={ground.id}>
+                            <Button 
+                              variant="ghost" 
+                              className="w-full justify-start text-left"
+                              onClick={() => handleVenueSelect(ground.id)}
+                            >
+                              <div>
+                                <p className="font-medium">{ground.name}</p>
+                                <p className="text-xs text-muted-foreground">{ground.location}</p>
+                              </div>
+                            </Button>
+                          </li>
+                        ))}
+                        <li className="pt-2 border-t mt-2">
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-center text-sportyfi-orange"
+                            onClick={handleGroundsBooking}
+                          >
+                            View All Grounds
+                          </Button>
+                        </li>
+                      </ul>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
           <div className="absolute inset-0 bg-black/40 z-0"></div>
         </section>
-
+        
         {/* Sports Categories */}
         <section className="py-16 bg-white">
           <div className="sportyfi-container">
