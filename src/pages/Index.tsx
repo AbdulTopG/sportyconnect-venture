@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import SportyFiHeader from '@/components/SportyFiHeader';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
-import { Volleyball, Map } from 'lucide-react';
+import { Volleyball, Map, PlayCircle } from 'lucide-react';
 
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
@@ -24,6 +25,10 @@ const Index = () => {
   
   const handleGroundsBooking = () => {
     navigate('/venues');
+  };
+  
+  const handleWatchMatches = () => {
+    navigate('/watch');
   };
   
   const handleVenueSelect = (venueId: string) => {
@@ -59,6 +64,11 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg" onClick={handleFindMatches}>
                   Find Matches
+                </Button>
+                <Button variant="outline" onClick={handleWatchMatches} className="border-white text-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 bg-red-500 hover:bg-red-600">
+                  <PlayCircle size={20} />
+                  Watch Matches
+                  <span className="bg-white text-red-500 text-xs px-1.5 py-0.5 rounded-full">Live</span>
                 </Button>
                 <Button variant="outline" onClick={handleHostMatch} className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-sportyfi-orange">
                   Host a Match
@@ -121,10 +131,17 @@ const Index = () => {
               </div>
             </div>
             <UpcomingMatches location={location} />
-            <div className="text-center mt-8">
+            <div className="text-center mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/matches">
                 <Button variant="outline" className="border-sportyfi-orange text-sportyfi-orange hover:bg-sportyfi-orange hover:text-white">
                   See All Matches
+                </Button>
+              </Link>
+              <Link to="/watch">
+                <Button className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2">
+                  <PlayCircle size={16} />
+                  Watch Live Matches
+                  <span className="bg-white text-red-500 text-xs px-1.5 py-0.5 rounded-full">Live</span>
                 </Button>
               </Link>
             </div>
@@ -185,8 +202,8 @@ const Index = () => {
               </Card>
               <Card className="sportyfi-card">
                 <CardContent className="pt-6">
-                  <h3 className="text-xl font-bold mb-2">Official Tournaments</h3>
-                  <p>Register for exclusive tournaments hosted by the SportyFi team with prizes and sponsorships.</p>
+                  <h3 className="text-xl font-bold mb-2">Watch Live Matches</h3>
+                  <p>Stream live sports events, watch past recordings, and interact with other fans through chat and reactions.</p>
                 </CardContent>
               </Card>
             </div>
@@ -212,4 +229,5 @@ const Index = () => {
       <Footer />
     </div>;
 };
+
 export default Index;

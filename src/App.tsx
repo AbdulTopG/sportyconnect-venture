@@ -26,6 +26,7 @@ import Admin from "./pages/Admin";
 import AdminAddVenue from "./pages/AdminAddVenue";
 import AdminEditVenue from "./pages/AdminEditVenue";
 import UserDashboard from "./pages/UserDashboard";
+import WatchMatches from "./pages/WatchMatches";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/add-venue" element={<AdminAddVenue />} />
             <Route path="/admin/edit-venue/:id" element={<AdminEditVenue />} />
+            <Route path="/watch" element={<WatchMatches />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

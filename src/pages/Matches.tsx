@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
@@ -6,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Calendar, MapPin, Users, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Loader2, PlayCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase, Match } from '@/integrations/supabase/client';
@@ -82,6 +83,10 @@ const Matches = () => {
     navigate('/matches/create');
   };
 
+  const handleWatchMatches = () => {
+    navigate('/watch');
+  };
+
   // Extract unique sports from the matches for filtering
   const allSports = Array.from(new Set(matches.map(match => match.sport)));
 
@@ -146,12 +151,24 @@ const Matches = () => {
                 </Select>
               </div>
               
-              <Button 
-                onClick={handleCreateMatch}
-                className="bg-sportyfi-orange hover:bg-red-600 text-white w-full md:w-auto"
-              >
-                Host a Match
-              </Button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Button 
+                  onClick={handleWatchMatches}
+                  variant="outline"
+                  className="flex-1 md:flex-auto flex items-center gap-2 border-red-500 text-red-500 hover:bg-red-50"
+                >
+                  <PlayCircle className="h-4 w-4" />
+                  Watch Matches
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-pulse">Live</span>
+                </Button>
+                
+                <Button 
+                  onClick={handleCreateMatch}
+                  className="flex-1 md:flex-auto bg-sportyfi-orange hover:bg-red-600 text-white"
+                >
+                  Host a Match
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -186,9 +203,17 @@ const Matches = () => {
                     <h3 className="text-lg font-semibold">
                       {match.sport.charAt(0).toUpperCase() + match.sport.slice(1)}
                     </h3>
-                    <Badge className={`${match.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
-                      {match.available_slots > 0 ? `${match.available_slots} spots left` : 'Full'}
-                    </Badge>
+                    <div className="flex gap-2">
+                      {Math.random() > 0.7 && (
+                        <Badge className="bg-red-100 text-red-800 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                          Live
+                        </Badge>
+                      )}
+                      <Badge className={`${match.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
+                        {match.available_slots > 0 ? `${match.available_slots} spots left` : 'Full'}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="space-y-2 mb-4">
                     <p className="text-gray-700 flex items-center">
@@ -207,12 +232,23 @@ const Matches = () => {
                       {match.team_size} players ({match.skill_level})
                     </p>
                   </div>
-                  <Button 
-                    onClick={() => navigate(`/matches/${match.id}`)}
-                    className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
-                  >
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    {Math.random() > 0.7 && (
+                      <Button 
+                        onClick={handleWatchMatches}
+                        className="flex-1 flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600"
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                        Watch Live
+                      </Button>
+                    )}
+                    <Button 
+                      onClick={() => navigate(`/matches/${match.id}`)}
+                      className="flex-1 bg-sportyfi-orange hover:bg-red-600 text-white"
+                    >
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

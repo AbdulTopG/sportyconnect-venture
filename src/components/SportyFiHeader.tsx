@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X, User, LogIn, LogOut, Map } from 'lucide-react';
+import { Menu, X, User, LogIn, LogOut, Map, PlayCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -17,6 +17,7 @@ const SportyFiHeader = () => {
     { title: 'Home', path: '/' },
     { title: 'Matches', path: '/matches' },
     { title: 'Tournaments', path: '/tournaments' },
+    { title: 'Watch Matches', path: '/watch', icon: <PlayCircle size={18} className="text-red-500" /> },
     { title: 'Grounds Booking', path: '/venues' },
     { title: 'Leaderboards', path: '/leaderboards' },
     { title: 'About', path: '/about' },
@@ -58,9 +59,13 @@ const SportyFiHeader = () => {
               <Link
                 key={link.title}
                 to={link.path}
-                className="text-gray-700 hover:text-sportyfi-orange font-medium transition-colors"
+                className="text-gray-700 hover:text-sportyfi-orange font-medium transition-colors flex items-center gap-1"
               >
+                {link.icon && link.icon}
                 {link.title}
+                {link.title === 'Watch Matches' && (
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">Live</span>
+                )}
               </Link>
             ))}
           </nav>
@@ -130,10 +135,14 @@ const SportyFiHeader = () => {
                       <Link
                         key={link.title}
                         to={link.path}
-                        className="text-foreground hover:text-sportyfi-orange font-medium transition-colors py-2"
+                        className="text-foreground hover:text-sportyfi-orange font-medium transition-colors py-2 flex items-center gap-2"
                         onClick={() => setIsOpen(false)}
                       >
+                        {link.icon && link.icon}
                         {link.title}
+                        {link.title === 'Watch Matches' && (
+                          <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">Live</span>
+                        )}
                       </Link>
                     ))}
                   </nav>
