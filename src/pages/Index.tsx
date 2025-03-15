@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -64,44 +63,10 @@ const Index = () => {
                 <Button variant="outline" onClick={handleHostMatch} className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-sportyfi-orange">
                   Host a Match
                 </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-sportyfi-orange">
-                      <Map size={20} />
-                      Grounds Booking
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72 p-0" align="start">
-                    <div className="p-2">
-                      <h3 className="font-medium text-center py-2 border-b">Popular Grounds</h3>
-                      <ul className="mt-2 space-y-1">
-                        {featuredGrounds.map((ground) => (
-                          <li key={ground.id}>
-                            <Button 
-                              variant="ghost" 
-                              className="w-full justify-start text-left"
-                              onClick={() => handleVenueSelect(ground.id)}
-                            >
-                              <div>
-                                <p className="font-medium">{ground.name}</p>
-                                <p className="text-xs text-muted-foreground">{ground.location}</p>
-                              </div>
-                            </Button>
-                          </li>
-                        ))}
-                        <li className="pt-2 border-t mt-2">
-                          <Button 
-                            variant="ghost" 
-                            className="w-full justify-center text-sportyfi-orange"
-                            onClick={handleGroundsBooking}
-                          >
-                            View All Grounds
-                          </Button>
-                        </li>
-                      </ul>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <Button variant="outline" onClick={handleGroundsBooking} className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-sportyfi-orange">
+                  <Map size={20} />
+                  Grounds Booking
+                </Button>
               </div>
             </div>
           </div>
