@@ -41,7 +41,7 @@ const Index = () => {
                 <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold px-6 py-6 h-auto text-lg" onClick={handleFindMatches}>
                   Find Matches
                 </Button>
-                <Button variant="outline" className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500" onClick={handleHostMatch}>
+                <Button variant="outline" onClick={handleHostMatch} className="border-white text-white font-semibold px-6 py-6 h-auto text-lg bg-red-600 hover:bg-red-500">
                   Host a Match
                 </Button>
                 <Button variant="outline" onClick={handleGroundsBooking} className="border-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2 text-stone-50 bg-red-600 hover:bg-red-500">
