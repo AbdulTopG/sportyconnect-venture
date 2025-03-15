@@ -32,6 +32,8 @@ const MatchDetail = () => {
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
+  const [canShare, setCanShare] = useState(false);
   const isMobile = useIsMobile();
   
   const [match, setMatch] = useState<Match | null>(null);
@@ -134,6 +136,14 @@ const MatchDetail = () => {
     
     fetchMatchDetails();
   }, [id]);
+
+  useEffect(() => {
+    setCanShare(
+      typeof navigator !== 'undefined' && 
+      !!navigator.share && 
+      !!navigator.canShare
+    );
+  }, []);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
   const matchIsFull = match?.available_slots === 0;
@@ -268,23 +278,27 @@ const MatchDetail = () => {
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
-    const shareTitle = `${match?.sport} Match`;
-    const shareText = `Join me for a ${match?.sport} match at ${match?.location}!`;
+    const shareTitle = match ? `${match.sport} Match` : 'Sport Match';
+    const shareText = match ? `Join me for a ${match.sport} match at ${match.location}!` : 'Join me for a match!';
+    
+    setIsCopying(true);
     
     try {
-      if (navigator.share) {
-        await navigator.share({
+      if (canShare) {
+        const shareData = {
           title: shareTitle,
           text: shareText,
           url: shareUrl,
-        });
-        console.log('Successfully shared');
+        };
+        
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          console.log('Successfully shared');
+        } else {
+          throw new Error('Content cannot be shared');
+        }
       } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Share it with your friends to invite them.",
-        });
+        throw new Error('Web Share API not supported');
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -299,10 +313,12 @@ const MatchDetail = () => {
         console.error('Clipboard error:', clipboardError);
         toast({
           title: "Sharing failed",
-          description: "Could not share or copy the link.",
+          description: "Could not share or copy the link. Try manually copying the URL.",
           variant: "destructive",
         });
       }
+    } finally {
+      setIsCopying(false);
     }
   };
 
@@ -420,13 +436,16 @@ const MatchDetail = () => {
                   onClick={handleShare}
                   variant="outline"
                   className="w-full"
+                  disabled={isCopying}
                 >
-                  {navigator.share ? (
+                  {isCopying ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : canShare ? (
                     <Share2 className="h-4 w-4 mr-2" />
                   ) : (
                     <Copy className="h-4 w-4 mr-2" />
                   )}
-                  {navigator.share ? "Share" : "Copy Link"}
+                  {isCopying ? "Processing..." : canShare ? "Share" : "Copy Link"}
                 </Button>
               </div>
             </div>
@@ -475,3 +494,4 @@ const MatchDetail = () => {
 };
 
 export default MatchDetail;
+
