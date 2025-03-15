@@ -18,6 +18,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+interface VenueImage {
+  image_url: string;
+}
+
+interface Venue {
+  id: string;
+  name: string;
+  location: string;
+  images?: VenueImage[];
+}
+
 interface UserReview {
   id: string;
   user_id: string;
@@ -25,12 +36,7 @@ interface UserReview {
   rating: number;
   comment: string;
   created_at: string;
-  venue: {
-    id: string;
-    name: string;
-    location: string;
-    images?: { image_url: string }[];
-  };
+  venue: Venue;
 }
 
 const UserReviews = () => {
@@ -45,10 +51,29 @@ const UserReviews = () => {
     try {
       setLoading(true);
       
+      // First, check if the venue_reviews table exists
+      const { data: tablesData } = await supabase
+        .from('venue_reviews')
+        .select('id')
+        .limit(1);
+      
+      // If the table doesn't exist or we can't access it, show appropriate message
+      if (tablesData === null) {
+        console.log('Venue reviews table not available yet');
+        setLoading(false);
+        return;
+      }
+      
+      // Continue with the regular query if the table exists
       const { data, error } = await supabase
         .from('venue_reviews')
         .select(`
-          *,
+          id,
+          user_id,
+          venue_id,
+          rating,
+          comment,
+          created_at,
           venue:venues(
             id, 
             name, 
@@ -61,7 +86,9 @@ const UserReviews = () => {
       
       if (error) throw error;
       
-      setReviews(data as UserReview[]);
+      if (data) {
+        setReviews(data as UserReview[]);
+      }
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast({

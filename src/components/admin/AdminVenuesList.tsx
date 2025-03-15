@@ -4,15 +4,10 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { 
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Pencil, Trash2, MapPin, Search, CheckCircle, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,36 +16,40 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Eye } from 'lucide-react';
-import type { VenueWithRelations } from '@/integrations/supabase/client';
+
+interface Venue {
+  id: string;
+  name: string;
+  location: string;
+  price_per_hour: number;
+  is_verified: boolean;
+  sports?: { id: string; sport: string }[];
+  images?: { id: string; image_url: string }[];
+}
 
 const AdminVenuesList = () => {
   const { toast } = useToast();
-  const [venues, setVenues] = useState<VenueWithRelations[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedVenue, setSelectedVenue] = useState<VenueWithRelations | null>(null);
-  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [venueToDelete, setVenueToDelete] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const fetchVenues = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('venues')
         .select(`
           *,
-          sports:venue_sports(*),
-          amenities:venue_amenities(*),
-          images:venue_images(*)
+          sports:venue_sports(id, sport),
+          images:venue_images(id, image_url)
         `)
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
       
       if (error) throw error;
       
-      setVenues(data || []);
+      setVenues(data as Venue[]);
     } catch (error) {
       console.error('Error fetching venues:', error);
       toast({
@@ -67,26 +66,28 @@ const AdminVenuesList = () => {
     fetchVenues();
   }, []);
   
-  const handleDeleteVenue = async () => {
-    if (!venueToDelete) return;
-    
+  const deleteVenue = async (venueId: string) => {
     try {
-      // Delete venue (cascade will handle related records)
+      // Delete associated records first (cascade delete may not be set up)
+      await supabase.from('venue_sports').delete().eq('venue_id', venueId);
+      await supabase.from('venue_amenities').delete().eq('venue_id', venueId);
+      await supabase.from('venue_images').delete().eq('venue_id', venueId);
+      
+      // Delete the venue itself
       const { error } = await supabase
         .from('venues')
         .delete()
-        .eq('id', venueToDelete);
+        .eq('id', venueId);
       
       if (error) throw error;
       
-      toast({
-        title: 'Success',
-        description: 'Venue has been deleted',
-      });
+      // Update the local state
+      setVenues(venues.filter(venue => venue.id !== venueId));
       
-      setDeleteConfirmationOpen(false);
-      setVenueToDelete(null);
-      fetchVenues();
+      toast({
+        title: 'Venue Deleted',
+        description: 'The venue has been deleted successfully',
+      });
     } catch (error) {
       console.error('Error deleting venue:', error);
       toast({
@@ -97,208 +98,165 @@ const AdminVenuesList = () => {
     }
   };
   
-  const openDeleteConfirmation = (venueId: string) => {
-    setVenueToDelete(venueId);
-    setDeleteConfirmationOpen(true);
+  const toggleVerification = async (venue: Venue) => {
+    try {
+      const { error } = await supabase
+        .from('venues')
+        .update({ is_verified: !venue.is_verified })
+        .eq('id', venue.id);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setVenues(venues.map(v => 
+        v.id === venue.id ? { ...v, is_verified: !venue.is_verified } : v
+      ));
+      
+      toast({
+        title: venue.is_verified ? 'Venue Unverified' : 'Venue Verified',
+        description: `The venue has been ${venue.is_verified ? 'unverified' : 'verified'} successfully`,
+      });
+    } catch (error) {
+      console.error('Error updating venue verification status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update venue verification status',
+        variant: 'destructive',
+      });
+    }
   };
   
+  const filteredVenues = venues.filter(venue => 
+    venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    venue.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const getVenueImage = (venue: Venue) => {
+    if (venue.images && venue.images.length > 0) {
+      return venue.images[0].image_url;
+    }
+    return 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1305&q=80';
+  };
+  
+  if (loading) {
+    return <div className="text-center py-8">Loading venues...</div>;
+  }
+  
   return (
-    <div>
-      {loading ? (
-        <div className="text-center py-8">Loading venues...</div>
-      ) : venues.length === 0 ? (
-        <div className="text-center py-8">No venues found</div>
+    <div className="space-y-6">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Search venues by name or location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      
+      {filteredVenues.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            {searchQuery ? 'No venues match your search.' : 'No venues found.'}
+          </p>
+        </div>
       ) : (
-        <>
-          <Table>
-            <TableCaption>List of all venues</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Price/Hour</TableHead>
-                <TableHead>Sports</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {venues.map((venue) => (
-                <TableRow key={venue.id}>
-                  <TableCell className="font-medium">{venue.name}</TableCell>
-                  <TableCell>{venue.location}</TableCell>
-                  <TableCell>₹{venue.price_per_hour}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {venue.sports?.slice(0, 2).map((sport) => (
-                        <Badge key={sport.id} variant="outline">
-                          {sport.sport}
-                        </Badge>
-                      ))}
-                      {venue.sports && venue.sports.length > 2 && (
-                        <Badge variant="outline">+{venue.sports.length - 2}</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => setSelectedVenue(venue)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle>Venue Details</DialogTitle>
-                            <DialogDescription>
-                              Review the venue information
-                            </DialogDescription>
-                          </DialogHeader>
-                          
-                          {selectedVenue && (
-                            <div className="mt-4 space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h3 className="font-semibold">Name</h3>
-                                  <p>{selectedVenue.name}</p>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Location</h3>
-                                  <p>{selectedVenue.location}</p>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Price per Hour</h3>
-                                  <p>₹{selectedVenue.price_per_hour}</p>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Verified</h3>
-                                  <Badge variant={selectedVenue.is_verified ? "success" : "outline"}>
-                                    {selectedVenue.is_verified ? "Yes" : "No"}
-                                  </Badge>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Contact Phone</h3>
-                                  <p>{selectedVenue.contact_phone || 'Not provided'}</p>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Contact Email</h3>
-                                  <p>{selectedVenue.contact_email || 'Not provided'}</p>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h3 className="font-semibold">Description</h3>
-                                <p>{selectedVenue.description || 'No description provided'}</p>
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h3 className="font-semibold">Sports</h3>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {selectedVenue.sports?.map((sport) => (
-                                      <Badge key={sport.id} variant="secondary">
-                                        {sport.sport}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">Amenities</h3>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {selectedVenue.amenities?.map((amenity) => (
-                                      <Badge key={amenity.id} variant="outline">
-                                        {amenity.amenity}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {selectedVenue.images && selectedVenue.images.length > 0 && (
-                                <div>
-                                  <h3 className="font-semibold mb-2">Images</h3>
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {selectedVenue.images.map((image) => (
-                                      <img 
-                                        key={image.id} 
-                                        src={image.image_url} 
-                                        alt={selectedVenue.name} 
-                                        className="rounded-md h-32 w-full object-cover"
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          
-                          <DialogFooter className="mt-6">
-                            <Link to={`/admin/edit-venue/${selectedVenue?.id}`}>
-                              <Button variant="outline">
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="destructive"
-                              onClick={() => {
-                                setDeleteConfirmationOpen(true);
-                                setVenueToDelete(selectedVenue?.id || null);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </Button>
-                            <DialogClose asChild>
-                              <Button variant="secondary">Close</Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                      
-                      <Link to={`/admin/edit-venue/${venue.id}`}>
-                        <Button variant="outline" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => openDeleteConfirmation(venue.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVenues.map((venue) => (
+            <Card key={venue.id} className="overflow-hidden">
+              <div className="h-40 relative">
+                <img 
+                  src={getVenueImage(venue)} 
+                  alt={venue.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2">
+                  <Button
+                    variant={venue.is_verified ? "outline" : "outline"}
+                    size="icon"
+                    className={`h-8 w-8 rounded-full ${venue.is_verified ? 'bg-green-100' : 'bg-red-100'}`}
+                    onClick={() => toggleVerification(venue)}
+                  >
+                    {venue.is_verified ? (
+                      <CheckCircle className="h-4 w-4 text-green-800" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-800" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <CardHeader className="p-4">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">{venue.name}</h3>
+                  <div className="flex items-center text-muted-foreground text-sm">
+                    <MapPin className="h-3.5 w-3.5 mr-1" />
+                    <span>{venue.location}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="px-4 pb-4 pt-0">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Price:</span>
+                    <span className="font-medium ml-1">₹{venue.price_per_hour}/hr</span>
+                  </div>
+                  <Badge variant={venue.is_verified ? "outline" : "outline"} className={venue.is_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                    {venue.is_verified ? 'Verified' : 'Unverified'}
+                  </Badge>
+                </div>
+                
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {venue.sports?.slice(0, 3).map((sport) => (
+                    <Badge key={sport.id} variant="secondary" className="bg-gray-100">
+                      {sport.sport}
+                    </Badge>
+                  ))}
+                  {venue.sports && venue.sports.length > 3 && (
+                    <Badge variant="secondary" className="bg-gray-100">+{venue.sports.length - 3}</Badge>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Link to={`/admin/edit-venue/${venue.id}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </Link>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          <Dialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete this venue? This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDeleteConfirmationOpen(false)}>
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={handleDeleteVenue}>
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Delete Venue</DialogTitle>
+                        <DialogDescription>
+                          Are you sure you want to delete "{venue.name}"? This action cannot be undone and will remove all associated data.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => {}}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => deleteVenue(venue.id)}
+                        >
+                          Delete Venue
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

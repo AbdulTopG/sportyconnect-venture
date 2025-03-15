@@ -30,17 +30,17 @@ const Admin = () => {
       }
       
       try {
-        // Check if the user is an admin by querying a special profiles table field
+        // Check if the user is an admin by querying the profiles table for role field
         // This is a simple implementation; in a production app, you might want more robust role management
         const { data, error } = await supabase
           .from('profiles')
-          .select('is_admin')
+          .select('role')
           .eq('id', user.id)
           .single();
         
         if (error) throw error;
         
-        if (data && data.is_admin) {
+        if (data && data.role === 'admin') {
           setIsAdmin(true);
         } else {
           toast({

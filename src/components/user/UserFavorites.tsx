@@ -18,19 +18,30 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+// Define a simpler interface for favorites
+interface VenueImage {
+  image_url: string;
+}
+
+interface VenueSport {
+  sport: string;
+}
+
+interface Venue {
+  id: string;
+  name: string;
+  location: string;
+  price_per_hour: number;
+  images?: VenueImage[];
+  sports?: VenueSport[];
+}
+
 interface FavoriteVenue {
   id: string;
   venue_id: string;
   user_id: string;
   created_at: string;
-  venue: {
-    id: string;
-    name: string;
-    location: string;
-    price_per_hour: number;
-    images?: { image_url: string }[];
-    sports?: { sport: string }[];
-  };
+  venue: Venue;
 }
 
 const UserFavorites = () => {
@@ -45,10 +56,27 @@ const UserFavorites = () => {
     try {
       setLoading(true);
       
+      // First, check if the venue_favorites table exists
+      const { data: tablesData } = await supabase
+        .from('venue_favorites')
+        .select('id')
+        .limit(1);
+      
+      // If the table doesn't exist or we can't access it, show appropriate message
+      if (tablesData === null) {
+        console.log('Venue favorites table not available yet');
+        setLoading(false);
+        return;
+      }
+      
+      // Continue with the regular query if the table exists
       const { data, error } = await supabase
         .from('venue_favorites')
         .select(`
-          *,
+          id,
+          venue_id,
+          user_id,
+          created_at,
           venue:venues(
             id, 
             name, 
@@ -63,7 +91,9 @@ const UserFavorites = () => {
       
       if (error) throw error;
       
-      setFavorites(data as FavoriteVenue[]);
+      if (data) {
+        setFavorites(data as FavoriteVenue[]);
+      }
     } catch (error) {
       console.error('Error fetching favorite venues:', error);
       toast({
