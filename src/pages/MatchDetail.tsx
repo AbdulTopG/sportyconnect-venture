@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -40,6 +41,24 @@ const MatchDetail = () => {
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [host, setHost] = useState<Host | null>(null);
   
+  useEffect(() => {
+    const checkShareSupport = () => {
+      try {
+        // Only set canShare to true if both share API and canShare method exist
+        setCanShare(
+          typeof navigator !== 'undefined' && 
+          !!navigator.share && 
+          typeof navigator.canShare === 'function'
+        );
+      } catch (error) {
+        console.error('Error checking share support:', error);
+        setCanShare(false);
+      }
+    };
+
+    checkShareSupport();
+  }, []);
+
   useEffect(() => {
     const fetchMatchDetails = async () => {
       if (!id) return;
@@ -136,14 +155,6 @@ const MatchDetail = () => {
     
     fetchMatchDetails();
   }, [id]);
-
-  useEffect(() => {
-    setCanShare(
-      typeof navigator !== 'undefined' && 
-      !!navigator.share && 
-      !!navigator.canShare
-    );
-  }, []);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
   const matchIsFull = match?.available_slots === 0;
@@ -284,39 +295,39 @@ const MatchDetail = () => {
     setIsCopying(true);
     
     try {
-      if (canShare) {
-        const shareData = {
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        };
-        
-        if (navigator.canShare(shareData)) {
-          await navigator.share(shareData);
-          console.log('Successfully shared');
-        } else {
-          throw new Error('Content cannot be shared');
+      // Use clipboard API as the primary method since it's more widely supported
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied!",
+        description: "Share it with your friends to invite them.",
+      });
+      
+      // Only attempt to use Web Share API as a fallback for mobile
+      if (canShare && isMobile) {
+        try {
+          const shareData = {
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl,
+          };
+          
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            console.log('Successfully shared');
+          }
+        } catch (shareError) {
+          console.error('Share API error (non-critical):', shareError);
+          // No need to show an error toast since clipboard already worked
         }
-      } else {
-        throw new Error('Web Share API not supported');
       }
     } catch (error) {
       console.error('Error sharing:', error);
       
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Share it with your friends to invite them.",
-        });
-      } catch (clipboardError) {
-        console.error('Clipboard error:', clipboardError);
-        toast({
-          title: "Sharing failed",
-          description: "Could not share or copy the link. Try manually copying the URL.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Sharing failed",
+        description: "Could not copy the link. Try manually copying the URL from your browser.",
+        variant: "destructive",
+      });
     } finally {
       setIsCopying(false);
     }
@@ -440,12 +451,10 @@ const MatchDetail = () => {
                 >
                   {isCopying ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : canShare ? (
-                    <Share2 className="h-4 w-4 mr-2" />
                   ) : (
                     <Copy className="h-4 w-4 mr-2" />
                   )}
-                  {isCopying ? "Processing..." : canShare ? "Share" : "Copy Link"}
+                  {isCopying ? "Processing..." : "Copy Link"}
                 </Button>
               </div>
             </div>
@@ -494,4 +503,3 @@ const MatchDetail = () => {
 };
 
 export default MatchDetail;
-
