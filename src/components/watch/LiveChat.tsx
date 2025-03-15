@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -212,118 +213,121 @@ const LiveChat: React.FC<LiveChatProps> = ({ onSendMessage }) => {
             {connectedUsers} online
           </Badge>
         </CardTitle>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full">
+      </CardHeader>
+      
+      <CardContent className="flex-grow overflow-hidden pt-2 px-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+          <TabsList className="w-full mb-2">
             <TabsTrigger value="chat" className="flex-1">Chat</TabsTrigger>
             <TabsTrigger value="polls" className="flex-1">Polls</TabsTrigger>
             <TabsTrigger value="reactions" className="flex-1">Reactions</TabsTrigger>
           </TabsList>
-        </Tabs>
-      </CardHeader>
-      
-      <CardContent className="flex-grow overflow-hidden pt-2 px-3">
-        <TabsContent value="chat" className="h-full flex flex-col m-0">
-          <div className="overflow-y-auto flex-grow mb-2">
-            {chatMessages.map(msg => (
-              <div key={msg.id} className={`mb-3 ${msg.isPinned ? 'bg-amber-50 p-2 rounded-md border-l-2 border-amber-500' : ''}`}>
-                {msg.isPinned && (
-                  <div className="text-xs text-amber-600 mb-1">📌 Pinned Message</div>
-                )}
-                <div className="flex items-start">
-                  <img src={msg.user.avatar} alt={msg.user.name} className="w-8 h-8 rounded-full mr-2" />
-                  <div className="flex-grow">
-                    <div className="flex items-center">
-                      <span className="font-semibold text-sm">{msg.user.name}</span>
-                      {getRoleBadge(msg.user.role)}
+          
+          <div className="flex-grow overflow-hidden">
+            <TabsContent value="chat" className="h-full flex flex-col m-0 data-[state=inactive]:hidden data-[state=active]:flex">
+              <div className="overflow-y-auto flex-grow mb-2">
+                {chatMessages.map(msg => (
+                  <div key={msg.id} className={`mb-3 ${msg.isPinned ? 'bg-amber-50 p-2 rounded-md border-l-2 border-amber-500' : ''}`}>
+                    {msg.isPinned && (
+                      <div className="text-xs text-amber-600 mb-1">📌 Pinned Message</div>
+                    )}
+                    <div className="flex items-start">
+                      <img src={msg.user.avatar} alt={msg.user.name} className="w-8 h-8 rounded-full mr-2" />
+                      <div className="flex-grow">
+                        <div className="flex items-center">
+                          <span className="font-semibold text-sm">{msg.user.name}</span>
+                          {getRoleBadge(msg.user.role)}
+                        </div>
+                        <p className="text-sm break-words">{msg.message}</p>
+                        <span className="text-xs text-gray-500">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm break-words">{msg.message}</p>
-                    <span className="text-xs text-gray-500">
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
                   </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="polls" className="h-full m-0 data-[state=inactive]:hidden data-[state=active]:block">
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <h3 className="font-semibold mb-3">{poll.question}</h3>
+                <div className="space-y-3">
+                  {poll.options.map(option => {
+                    const percentage = Math.round((option.votes / poll.totalVotes) * 100) || 0;
+                    return (
+                      <div key={option.id} className="space-y-1">
+                        <div className="flex justify-between items-center text-sm">
+                          <span>{option.text}</span>
+                          <span>{percentage}% ({option.votes})</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div 
+                            className={`h-2.5 rounded-full ${option.id === '1' ? 'bg-blue-500' : option.id === '2' ? 'bg-red-500' : 'bg-yellow-500'}`}
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-1 text-xs h-7"
+                          disabled={poll.userVoted || !user}
+                          onClick={() => handleVote(option.id)}
+                        >
+                          {poll.userVoted && option.id === '1' ? 'Voted ✓' : 'Vote'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Total votes: {poll.totalVotes}
                 </div>
               </div>
-            ))}
-            <div ref={messagesEndRef} />
+              
+              {!user && (
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">Login to participate in polls</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="reactions" className="h-full m-0 data-[state=inactive]:hidden data-[state=active]:block">
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <ThumbsUp className="h-6 w-6 mb-1 text-blue-500" />
+                  <span className="text-xs">324</span>
+                </Button>
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <Flame className="h-6 w-6 mb-1 text-orange-500" />
+                  <span className="text-xs">278</span>
+                </Button>
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <Heart className="h-6 w-6 mb-1 text-red-500" />
+                  <span className="text-xs">186</span>
+                </Button>
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <Zap className="h-6 w-6 mb-1 text-yellow-500" />
+                  <span className="text-xs">124</span>
+                </Button>
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <ThumbsDown className="h-6 w-6 mb-1 text-gray-500" />
+                  <span className="text-xs">52</span>
+                </Button>
+                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                  <BarChart3 className="h-6 w-6 mb-1 text-purple-500" />
+                  <span className="text-xs">Statistics</span>
+                </Button>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Top Fan Reactions</h3>
+                <p className="text-sm">Reactions update in real-time during key moments of the match. React to exciting plays and see what other fans think!</p>
+              </div>
+            </TabsContent>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="polls" className="h-full m-0">
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h3 className="font-semibold mb-3">{poll.question}</h3>
-            <div className="space-y-3">
-              {poll.options.map(option => {
-                const percentage = Math.round((option.votes / poll.totalVotes) * 100) || 0;
-                return (
-                  <div key={option.id} className="space-y-1">
-                    <div className="flex justify-between items-center text-sm">
-                      <span>{option.text}</span>
-                      <span>{percentage}% ({option.votes})</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className={`h-2.5 rounded-full ${option.id === '1' ? 'bg-blue-500' : option.id === '2' ? 'bg-red-500' : 'bg-yellow-500'}`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-1 text-xs h-7"
-                      disabled={poll.userVoted || !user}
-                      onClick={() => handleVote(option.id)}
-                    >
-                      {poll.userVoted && option.id === '1' ? 'Voted ✓' : 'Vote'}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Total votes: {poll.totalVotes}
-            </div>
-          </div>
-          
-          {!user && (
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Login to participate in polls</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="reactions" className="h-full m-0">
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <ThumbsUp className="h-6 w-6 mb-1 text-blue-500" />
-              <span className="text-xs">324</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <Flame className="h-6 w-6 mb-1 text-orange-500" />
-              <span className="text-xs">278</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <Heart className="h-6 w-6 mb-1 text-red-500" />
-              <span className="text-xs">186</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <Zap className="h-6 w-6 mb-1 text-yellow-500" />
-              <span className="text-xs">124</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <ThumbsDown className="h-6 w-6 mb-1 text-gray-500" />
-              <span className="text-xs">52</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-              <BarChart3 className="h-6 w-6 mb-1 text-purple-500" />
-              <span className="text-xs">Statistics</span>
-            </Button>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Top Fan Reactions</h3>
-            <p className="text-sm">Reactions update in real-time during key moments of the match. React to exciting plays and see what other fans think!</p>
-          </div>
-        </TabsContent>
+        </Tabs>
       </CardContent>
       
       <CardFooter className="pt-2">
