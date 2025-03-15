@@ -22,6 +22,10 @@ import Venues from "./pages/Venues";
 import VenueDetail from "./pages/VenueDetail";
 import RequestVenue from "./pages/RequestVenue";
 import Bookings from "./pages/Bookings";
+import Admin from "./pages/Admin";
+import AdminAddVenue from "./pages/AdminAddVenue";
+import AdminEditVenue from "./pages/AdminEditVenue";
+import UserDashboard from "./pages/UserDashboard";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +53,10 @@ const App = () => (
             <Route path="/venues/:id" element={<VenueDetail />} />
             <Route path="/venues/request" element={<RequestVenue />} />
             <Route path="/bookings" element={<Bookings />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/add-venue" element={<AdminAddVenue />} />
+            <Route path="/admin/edit-venue/:id" element={<AdminEditVenue />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
