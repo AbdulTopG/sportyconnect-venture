@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, User, LogIn, LogOut, Map } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
@@ -17,6 +17,7 @@ const SportyFiHeader = () => {
     { title: 'Home', path: '/' },
     { title: 'Matches', path: '/matches' },
     { title: 'Tournaments', path: '/tournaments' },
+    { title: 'Grounds Booking', path: '/venues' },
     { title: 'Leaderboards', path: '/leaderboards' },
     { title: 'About', path: '/about' },
     { title: 'Contact', path: '/contact' },

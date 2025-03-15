@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import SportyFiHeader from '@/components/SportyFiHeader';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import FeaturedTournaments from '@/components/FeaturedTournaments';
 import Footer from '@/components/Footer';
-import { Volleyball, Table, Dice6 } from 'lucide-react';
+import { Volleyball, Table, Dice6, Map } from 'lucide-react';
 
 const Index = () => {
   const [location, setLocation] = useState('Mumbai');
@@ -19,6 +20,10 @@ const Index = () => {
   
   const handleHostMatch = () => {
     navigate('/matches/create');
+  };
+
+  const handleGroundsBooking = () => {
+    navigate('/venues');
   };
 
   const handleSportCardClick = (sport: string) => {
@@ -52,6 +57,14 @@ const Index = () => {
                   onClick={handleHostMatch}
                 >
                   Host a Match
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-white text-white font-semibold px-6 py-6 h-auto text-lg flex items-center gap-2"
+                  onClick={handleGroundsBooking}
+                >
+                  <Map size={20} />
+                  Grounds Booking
                 </Button>
               </div>
             </div>
