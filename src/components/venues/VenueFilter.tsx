@@ -98,16 +98,22 @@ const VenueFilter = ({ onFilterChange }: VenueFilterProps) => {
   };
   
   const handlePriceChange = (value: number[]) => {
+    // Ensure we always have exactly two values for the tuple type
+    const priceRange: [number, number] = [
+      value[0] ?? 0,
+      value[1] ?? 5000
+    ];
+    
     const newFilters = {
       ...filters,
-      priceRange: [value[0], value[1]] as [number, number]
+      priceRange
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
   
   const handleReset = () => {
-    const defaultFilters = {
+    const defaultFilters: VenueFilterValues = {
       searchQuery: '',
       sport: 'All Sports',
       location: 'All Locations',
