@@ -98,7 +98,7 @@ const Index = () => {
                         {sport === 'Tennis' && <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop" alt="Tennis player in action" className="w-full h-full object-cover" />}
                         {sport === 'Kabaddi' && <img src="https://images.unsplash.com/photo-1587329310686-91414b8e3cb7?q=80&w=1000&auto=format&fit=crop" alt="Kabaddi players in action" className="w-full h-full object-cover" />}
                         {sport === 'Volleyball' && <img src="https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1000&auto=format&fit=crop" alt="Volleyball players in action" className="w-full h-full object-cover" />}
-                        {sport === 'Snooker' && <img src="https://images.unsplash.com/photo-1626023772800-eadff10c1573?q=80&w=1000&auto=format&fit=crop" alt="Close up of snooker balls and cue on green table" className="w-full h-full object-cover" />}
+                        {sport === 'Snooker' && <img src="/lovable-uploads/814c89ff-45e2-42f6-a6ec-1823e126c5a1.png" alt="Snooker balls and cue on green table" className="w-full h-full object-cover" />}
                         {sport === 'Table Tennis' && <img src="https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?q=80&w=1000&auto=format&fit=crop" alt="Table tennis paddle and ball" className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                           <span className="text-xl font-bold text-white">{sport}</span>
