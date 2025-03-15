@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -6,7 +5,6 @@ import Footer from '@/components/Footer';
 import LiveMatchCard from '@/components/watch/LiveMatchCard';
 import UpcomingMatchCard from '@/components/watch/UpcomingMatchCard';
 import RecordedMatchCard from '@/components/watch/RecordedMatchCard';
-import LiveChat from '@/components/watch/LiveChat';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -14,7 +12,6 @@ import { PlayCircle, Clock, Archive, Search, BellRing, Bell } from 'lucide-react
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
-// Dummy data for matches
 const liveMatches = [
   {
     id: 'live1',
@@ -25,7 +22,7 @@ const liveMatches = [
     teams: { home: 'Mumbai Tigers', away: 'Delhi Capitals' },
     score: { home: 120, away: 110 },
     thumbnail: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1000&auto=format&fit=crop',
-    startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
+    startTime: new Date(Date.now() - 30 * 60 * 1000),
   },
   {
     id: 'live2',
@@ -36,7 +33,7 @@ const liveMatches = [
     teams: { home: 'Kolkata Warriors', away: 'Chennai United' },
     score: { home: 2, away: 1 },
     thumbnail: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735&auto=format&fit=crop',
-    startTime: new Date(Date.now() - 45 * 60 * 1000), // Started 45 minutes ago
+    startTime: new Date(Date.now() - 45 * 60 * 1000),
   },
 ];
 
@@ -47,7 +44,7 @@ const upcomingMatches = [
     sport: 'Basketball',
     teams: { home: 'Bangalore Bulls', away: 'Hyderabad Hawks' },
     thumbnail: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000&auto=format&fit=crop',
-    startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
+    startTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
     remindersEnabled: false,
   },
   {
@@ -56,7 +53,7 @@ const upcomingMatches = [
     sport: 'Tennis',
     teams: { home: 'Rajasthan Royals', away: 'Punjab Kings' },
     thumbnail: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=1000&auto=format&fit=crop',
-    startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
+    startTime: new Date(Date.now() + 4 * 60 * 60 * 1000),
     remindersEnabled: true,
   },
   {
@@ -65,7 +62,7 @@ const upcomingMatches = [
     sport: 'Volleyball',
     teams: { home: 'Gujarat Giants', away: 'Kerala Spikers' },
     thumbnail: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1000&auto=format&fit=crop',
-    startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
+    startTime: new Date(Date.now() + 6 * 60 * 60 * 1000),
     remindersEnabled: false,
   },
 ];
@@ -77,7 +74,7 @@ const recordedMatches = [
     sport: 'Cricket',
     teams: { home: 'Mumbai Tigers', away: 'Chennai Super Kings' },
     thumbnail: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1000&auto=format&fit=crop',
-    recordedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    recordedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     duration: '12:34',
     views: 4523,
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
@@ -88,7 +85,7 @@ const recordedMatches = [
     sport: 'Football',
     teams: { home: 'Delhi Dynamos', away: 'Kolkata Warriors' },
     thumbnail: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735&auto=format&fit=crop',
-    recordedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+    recordedDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
     duration: '1:45:22',
     views: 7891,
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
@@ -99,7 +96,7 @@ const recordedMatches = [
     sport: 'Basketball',
     teams: { home: 'Hyderabad Hawks', away: 'Bangalore Bulls' },
     thumbnail: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000&auto=format&fit=crop',
-    recordedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    recordedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     duration: '9:45',
     views: 3254,
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
@@ -113,7 +110,6 @@ const WatchMatches = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Set first live match as default selected match
   useEffect(() => {
     if (liveMatches.length > 0 && !selectedMatch) {
       setSelectedMatch(liveMatches[0]);
@@ -135,25 +131,10 @@ const WatchMatches = () => {
       return;
     }
     
-    // In a real app, this would update a database
     toast({
       title: "Reminder Set",
       description: "You'll be notified when this match starts",
     });
-  };
-
-  const handleSendMessage = (message: string) => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to participate in live chat",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real app, this would send message to a database/socket
-    console.log("Message sent:", message);
   };
 
   return (
@@ -166,9 +147,8 @@ const WatchMatches = () => {
             <PlayCircle className="mr-2 text-red-500" size={32} /> Watch Matches
           </h1>
           
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Main content */}
-            <div className="w-full lg:w-2/3">
+          <div>
+            <div className="w-full">
               {selectedMatch ? (
                 <div className="mb-6">
                   <div className="relative pb-[56.25%] h-0 rounded-lg overflow-hidden bg-black">
@@ -237,7 +217,7 @@ const WatchMatches = () => {
                   
                   <TabsContent value="live">
                     {liveMatches.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {liveMatches.map(match => (
                           <LiveMatchCard 
                             key={match.id} 
@@ -254,7 +234,7 @@ const WatchMatches = () => {
                   
                   <TabsContent value="upcoming">
                     {upcomingMatches.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {upcomingMatches.map(match => (
                           <UpcomingMatchCard 
                             key={match.id} 
@@ -270,7 +250,7 @@ const WatchMatches = () => {
                   
                   <TabsContent value="recorded">
                     {recordedMatches.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {recordedMatches.map(match => (
                           <RecordedMatchCard 
                             key={match.id} 
@@ -284,11 +264,6 @@ const WatchMatches = () => {
                   </TabsContent>
                 </Tabs>
               </div>
-            </div>
-            
-            {/* Sidebar */}
-            <div className="w-full lg:w-1/3">
-              <LiveChat onSendMessage={handleSendMessage} />
             </div>
           </div>
         </div>
