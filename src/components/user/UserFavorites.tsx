@@ -56,20 +56,6 @@ const UserFavorites = () => {
     try {
       setLoading(true);
       
-      // First, check if the venue_favorites table exists
-      const { data: tablesData } = await supabase
-        .from('venue_favorites')
-        .select('id')
-        .limit(1);
-      
-      // If the table doesn't exist or we can't access it, show appropriate message
-      if (tablesData === null) {
-        console.log('Venue favorites table not available yet');
-        setLoading(false);
-        return;
-      }
-      
-      // Continue with the regular query if the table exists
       const { data, error } = await supabase
         .from('venue_favorites')
         .select(`

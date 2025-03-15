@@ -2,67 +2,44 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-
-interface VenueData {
-  id: string;
-  name: string;
-  location: string;
-  description: string;
-  price_per_hour: number;
-  contact_email: string;
-  contact_phone: string;
-  is_verified: boolean;
-  sports?: { id: string; sport: string }[];
-  amenities?: { id: string; amenity: string }[];
-  images?: { id: string; image_url: string; is_primary: boolean }[];
-}
-
-const sports = [
-  'Cricket', 'Football', 'Basketball', 'Tennis', 
-  'Badminton', 'Volleyball', 'Swimming', 'Table Tennis'
-];
-
-const amenities = [
-  'Parking', 'Changing Rooms', 'Washrooms', 'Cafeteria', 
-  'Water Cooler', 'Seating', 'Floodlights', 'Equipment Rental'
-];
+import { ShieldCheck, ArrowLeft, Building, Loader2 } from 'lucide-react';
 
 const AdminEditVenue = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [venueData, setVenueData] = useState<VenueData>({
-    id: '',
-    name: '',
-    location: '',
-    description: '',
-    price_per_hour: 0,
-    contact_email: '',
-    contact_phone: '',
-    is_verified: false,
-    sports: [],
-    amenities: [],
-    images: []
-  });
+  const [error, setError] = useState<string | null>(null);
   
-  const [selectedSports, setSelectedSports] = useState<string[]>([]);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  // Venue data
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [description, setDescription] = useState('');
+  const [pricePerHour, setPricePerHour] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [sports, setSports] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
+  
+  // Available sports and amenities
+  const availableSports = ['Cricket', 'Football', 'Basketball', 'Tennis', 'Badminton', 'Swimming', 'Table Tennis', 'Volleyball'];
+  const availableAmenities = ['Parking', 'Changing Rooms', 'Showers', 'Equipment Rental', 'Cafe', 'Floodlights', 'Seating', 'WiFi'];
   
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -72,36 +49,45 @@ const AdminEditVenue = () => {
       }
       
       try {
-        // Check if user has admin role
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
         
-        if (error || !data || data.role !== 'admin') {
+        if (error) throw error;
+        
+        if (data && data.role === 'admin') {
+          setIsAdmin(true);
+          fetchVenueData();
+        } else {
           toast({
             title: "Access Denied",
             description: "You don't have permission to access this page.",
             variant: "destructive",
           });
           navigate('/');
-          return;
         }
-        
-        fetchVenueData();
       } catch (error) {
         console.error('Error checking admin status:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
         navigate('/');
       }
     };
     
     checkAdminStatus();
-  }, [user, id]);
+  }, [user, navigate, toast, id]);
   
   const fetchVenueData = async () => {
+    if (!id) return;
+    
     try {
       setIsLoading(true);
+      setError(null);
       
       // Fetch venue details
       const { data: venue, error: venueError } = await supabase
@@ -112,159 +98,168 @@ const AdminEditVenue = () => {
       
       if (venueError) throw venueError;
       
-      // Fetch sports for this venue
-      const { data: sports, error: sportsError } = await supabase
+      if (!venue) {
+        setError('Venue not found');
+        return;
+      }
+      
+      // Set venue basic details
+      setName(venue.name);
+      setLocation(venue.location);
+      setDescription(venue.description || '');
+      setPricePerHour(venue.price_per_hour.toString());
+      setContactEmail(venue.contact_email || '');
+      setContactPhone(venue.contact_phone || '');
+      setIsVerified(venue.is_verified);
+      
+      // Fetch venue sports
+      const { data: sportsData, error: sportsError } = await supabase
         .from('venue_sports')
-        .select('id, sport')
+        .select('sport')
         .eq('venue_id', id);
       
       if (sportsError) throw sportsError;
+      setSports(sportsData.map(item => item.sport));
       
-      // Fetch amenities for this venue
-      const { data: amenities, error: amenitiesError } = await supabase
+      // Fetch venue amenities
+      const { data: amenitiesData, error: amenitiesError } = await supabase
         .from('venue_amenities')
-        .select('id, amenity')
+        .select('amenity')
         .eq('venue_id', id);
       
       if (amenitiesError) throw amenitiesError;
+      setAmenities(amenitiesData.map(item => item.amenity));
       
-      // Fetch images for this venue
-      const { data: images, error: imagesError } = await supabase
+      // Fetch venue images
+      const { data: imagesData, error: imagesError } = await supabase
         .from('venue_images')
-        .select('id, image_url, is_primary')
+        .select('image_url')
         .eq('venue_id', id);
       
       if (imagesError) throw imagesError;
-      
-      setVenueData({
-        ...venue,
-        sports,
-        amenities,
-        images
-      });
-      
-      // Set selected sports and amenities
-      setSelectedSports(sports.map(s => s.sport));
-      setSelectedAmenities(amenities.map(a => a.amenity));
+      setImages(imagesData.map(item => item.image_url));
       
     } catch (error) {
-      console.error('Error fetching venue data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load venue data",
-        variant: "destructive",
-      });
+      console.error('Error fetching venue details:', error);
+      setError('Failed to load venue details');
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleSave = async () => {
+  const handleSportsToggle = (sport: string) => {
+    setSports(
+      sports.includes(sport)
+        ? sports.filter(s => s !== sport)
+        : [...sports, sport]
+    );
+  };
+  
+  const handleAmenitiesToggle = (amenity: string) => {
+    setAmenities(
+      amenities.includes(amenity)
+        ? amenities.filter(a => a !== amenity)
+        : [...amenities, amenity]
+    );
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!id) return;
+    
     try {
       setIsSaving(true);
+      setError(null);
       
-      // Update venue details
+      // Validate inputs
+      if (!name || !location || !pricePerHour) {
+        setError('Please fill in all required fields');
+        setIsSaving(false);
+        return;
+      }
+      
+      // Update venue in venues table
       const { error: venueError } = await supabase
         .from('venues')
         .update({
-          name: venueData.name,
-          location: venueData.location,
-          description: venueData.description,
-          price_per_hour: venueData.price_per_hour,
-          contact_email: venueData.contact_email,
-          contact_phone: venueData.contact_phone,
-          is_verified: venueData.is_verified,
-          updated_at: new Date().toISOString()
+          name,
+          location,
+          description,
+          price_per_hour: parseFloat(pricePerHour),
+          contact_email: contactEmail || null,
+          contact_phone: contactPhone || null,
+          is_verified: isVerified,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', id);
       
       if (venueError) throw venueError;
       
-      // Delete existing sports and add new ones
-      await supabase
+      // Update sports - first delete existing
+      const { error: deleteSportsError } = await supabase
         .from('venue_sports')
         .delete()
         .eq('venue_id', id);
       
-      const sportsToInsert = selectedSports.map(sport => ({
-        venue_id: id,
-        sport
-      }));
+      if (deleteSportsError) throw deleteSportsError;
       
-      if (sportsToInsert.length > 0) {
-        const { error: sportsError } = await supabase
+      // Insert new sports
+      if (sports.length > 0) {
+        const sportsToInsert = sports.map(sport => ({
+          venue_id: id,
+          sport,
+        }));
+        
+        const { error: insertSportsError } = await supabase
           .from('venue_sports')
           .insert(sportsToInsert);
         
-        if (sportsError) throw sportsError;
+        if (insertSportsError) throw insertSportsError;
       }
       
-      // Delete existing amenities and add new ones
-      await supabase
+      // Update amenities - first delete existing
+      const { error: deleteAmenitiesError } = await supabase
         .from('venue_amenities')
         .delete()
         .eq('venue_id', id);
       
-      const amenitiesToInsert = selectedAmenities.map(amenity => ({
-        venue_id: id,
-        amenity
-      }));
+      if (deleteAmenitiesError) throw deleteAmenitiesError;
       
-      if (amenitiesToInsert.length > 0) {
-        const { error: amenitiesError } = await supabase
+      // Insert new amenities
+      if (amenities.length > 0) {
+        const amenitiesToInsert = amenities.map(amenity => ({
+          venue_id: id,
+          amenity,
+        }));
+        
+        const { error: insertAmenitiesError } = await supabase
           .from('venue_amenities')
           .insert(amenitiesToInsert);
         
-        if (amenitiesError) throw amenitiesError;
+        if (insertAmenitiesError) throw insertAmenitiesError;
       }
+      
+      // Image handling would typically be here, but is more complex with storage
+      // For now we'll skip adding new image functionality
       
       toast({
         title: "Venue Updated",
-        description: "The venue has been updated successfully",
+        description: "The venue has been updated successfully.",
       });
       
       navigate('/admin');
+      
     } catch (error) {
       console.error('Error updating venue:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update venue",
-        variant: "destructive",
-      });
+      setError('Failed to update venue. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
   
-  const toggleSport = (sport: string) => {
-    setSelectedSports(prev => 
-      prev.includes(sport)
-        ? prev.filter(s => s !== sport)
-        : [...prev, sport]
-    );
-  };
-  
-  const toggleAmenity = (amenity: string) => {
-    setSelectedAmenities(prev => 
-      prev.includes(amenity)
-        ? prev.filter(a => a !== amenity)
-        : [...prev, amenity]
-    );
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <SportyFiHeader />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Loading venue data...</span>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+  if (!isAdmin) {
+    return null; // Will redirect in useEffect
   }
   
   return (
@@ -272,170 +267,197 @@ const AdminEditVenue = () => {
       <SportyFiHeader />
       
       <main className="flex-grow py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Admin
-            </Button>
-            
-            <Button 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/admin')}
+            className="mb-6"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Admin Dashboard
+          </Button>
+          
+          <div className="flex items-center mb-6">
+            <Building className="h-8 w-8 text-sportyfi-orange mr-3" />
+            <h1 className="text-2xl font-bold">Edit Venue</h1>
           </div>
           
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Edit Venue</CardTitle>
-              <CardDescription>
-                Update the details for {venueData.name}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Venue Name</Label>
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-sportyfi-orange" />
+            </div>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Venue Details</CardTitle>
+                <CardDescription>
+                  Update the information for {name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Venue Name *</Label>
                       <Input 
-                        id="name" 
-                        value={venueData.name} 
-                        onChange={(e) => setVenueData({...venueData, name: e.target.value})}
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                       />
                     </div>
                     
-                    <div>
-                      <Label htmlFor="location">Location</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Location *</Label>
                       <Input 
-                        id="location" 
-                        value={venueData.location} 
-                        onChange={(e) => setVenueData({...venueData, location: e.target.value})}
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
                         required
                       />
                     </div>
                     
-                    <div>
-                      <Label htmlFor="price">Price per Hour (₹)</Label>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea 
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="pricePerHour">Price Per Hour (₹) *</Label>
                       <Input 
-                        id="price" 
-                        type="number" 
-                        value={venueData.price_per_hour} 
-                        onChange={(e) => setVenueData({...venueData, price_per_hour: Number(e.target.value)})}
+                        id="pricePerHour"
+                        type="number"
+                        value={pricePerHour}
+                        onChange={(e) => setPricePerHour(e.target.value)}
                         required
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="isVerified" className="flex items-center space-x-2 cursor-pointer">
+                        <Checkbox 
+                          id="isVerified" 
+                          checked={isVerified}
+                          onCheckedChange={(checked) => setIsVerified(checked === true)}
+                        />
+                        <span>Mark as Verified</span>
+                      </Label>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="contactEmail">Contact Email</Label>
+                      <Input 
+                        id="contactEmail"
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="contactPhone">Contact Phone</Label>
+                      <Input 
+                        id="contactPhone"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
                       />
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="email">Contact Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        value={venueData.contact_email} 
-                        onChange={(e) => setVenueData({...venueData, contact_email: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="phone">Contact Phone</Label>
-                      <Input 
-                        id="phone" 
-                        value={venueData.contact_phone} 
-                        onChange={(e) => setVenueData({...venueData, contact_phone: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 pt-4">
-                      <Checkbox 
-                        id="verified" 
-                        checked={venueData.is_verified}
-                        onCheckedChange={(checked) => 
-                          setVenueData({...venueData, is_verified: checked as boolean})
-                        }
-                      />
-                      <Label 
-                        htmlFor="verified" 
-                        className="cursor-pointer"
-                      >
-                        Mark as Verified
-                      </Label>
+                  <div className="space-y-3">
+                    <Label>Available Sports</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {availableSports.map((sport) => (
+                        <div key={sport} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`sport-${sport}`}
+                            checked={sports.includes(sport)}
+                            onCheckedChange={() => handleSportsToggle(sport)}
+                          />
+                          <Label htmlFor={`sport-${sport}`} className="cursor-pointer">
+                            {sport}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    value={venueData.description || ''} 
-                    onChange={(e) => setVenueData({...venueData, description: e.target.value})}
-                    rows={4}
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Sports</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {sports.map((sport) => (
-                      <div key={sport} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`sport-${sport}`} 
-                          checked={selectedSports.includes(sport)}
-                          onCheckedChange={() => toggleSport(sport)}
-                        />
-                        <Label 
-                          htmlFor={`sport-${sport}`} 
-                          className="cursor-pointer"
-                        >
-                          {sport}
-                        </Label>
+                  
+                  <div className="space-y-3">
+                    <Label>Amenities</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {availableAmenities.map((amenity) => (
+                        <div key={amenity} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`amenity-${amenity}`}
+                            checked={amenities.includes(amenity)}
+                            onCheckedChange={() => handleAmenitiesToggle(amenity)}
+                          />
+                          <Label htmlFor={`amenity-${amenity}`} className="cursor-pointer">
+                            {amenity}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Image display - more complex image update would go here */}
+                  {images.length > 0 && (
+                    <div className="space-y-3">
+                      <Label>Current Images</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {images.map((url, index) => (
+                          <div key={index} className="aspect-square rounded-md overflow-hidden">
+                            <img 
+                              src={url} 
+                              alt={`Venue image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => navigate('/admin')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={isSaving}
+                      className="bg-sportyfi-orange hover:bg-red-600"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </Button>
                   </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Amenities</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {amenities.map((amenity) => (
-                      <div key={amenity} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`amenity-${amenity}`} 
-                          checked={selectedAmenities.includes(amenity)}
-                          onCheckedChange={() => toggleAmenity(amenity)}
-                        />
-                        <Label 
-                          htmlFor={`amenity-${amenity}`} 
-                          className="cursor-pointer"
-                        >
-                          {amenity}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       

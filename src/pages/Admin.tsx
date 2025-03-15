@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +30,6 @@ const Admin = () => {
       
       try {
         // Check if the user is an admin by querying the profiles table for role field
-        // This is a simple implementation; in a production app, you might want more robust role management
         const { data, error } = await supabase
           .from('profiles')
           .select('role')

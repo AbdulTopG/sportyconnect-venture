@@ -1,62 +1,63 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Check, X, MapPin, Phone, Mail, IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface VenueRequest {
   id: string;
   name: string;
+  description: string | null;
   location: string;
-  description: string;
+  contact_email: string;
+  contact_phone: string;
   price_per_hour: number;
   sports: string[];
   amenities: string[];
-  contact_email: string;
-  contact_phone: string;
   status: string;
   created_at: string;
   owner_id: string;
-  owner?: {
-    email?: string;
-    username?: string;
-  };
+  owner_name: string | null;
 }
 
 const AdminVenueRequests = () => {
   const { toast } = useToast();
-  const [requests, setRequests] = useState<VenueRequest[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [venueRequests, setVenueRequests] = useState<VenueRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const fetchRequests = async () => {
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+
+  const fetchVenueRequests = async () => {
     try {
       setLoading(true);
-      
       const { data, error } = await supabase
         .from('venue_requests')
         .select(`
           *,
-          owner:profiles(username, email:auth.users!id(email))
+          owner:profiles!owner_id(username)
         `)
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      
-      setRequests(data as VenueRequest[]);
+
+      // Transform the data to match the VenueRequest interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        owner_name: item.owner?.username
+      })) as VenueRequest[];
+
+      setVenueRequests(transformedData || []);
     } catch (error) {
       console.error('Error fetching venue requests:', error);
       toast({
@@ -68,24 +69,22 @@ const AdminVenueRequests = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    fetchRequests();
+    fetchVenueRequests();
   }, []);
-  
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-  
-  const handleApprove = async (request: VenueRequest) => {
+
+  const approveVenueRequest = async (request: VenueRequest) => {
     try {
-      // Step 1: Create a new venue in the venues table
-      const { data: venue, error: venueError } = await supabase
+      setProcessingIds(prev => new Set(prev).add(request.id));
+      
+      // First, create a new venue in the venues table
+      const { data: venueData, error: venueError } = await supabase
         .from('venues')
         .insert({
           name: request.name,
-          location: request.location,
           description: request.description,
+          location: request.location,
           price_per_hour: request.price_per_hour,
           contact_email: request.contact_email,
           contact_phone: request.contact_phone,
@@ -94,55 +93,55 @@ const AdminVenueRequests = () => {
         })
         .select()
         .single();
-      
+
       if (venueError) throw venueError;
       
-      // Step 2: Add sports for the venue
-      const sportsToInsert = request.sports.map(sport => ({
-        venue_id: venue.id,
-        sport
-      }));
-      
-      if (sportsToInsert.length > 0) {
+      // Then, add sports to venue_sports table
+      if (request.sports.length > 0) {
+        const sportsToInsert = request.sports.map(sport => ({
+          venue_id: venueData.id,
+          sport
+        }));
+        
         const { error: sportsError } = await supabase
           .from('venue_sports')
           .insert(sportsToInsert);
-        
+          
         if (sportsError) throw sportsError;
       }
       
-      // Step 3: Add amenities for the venue
-      const amenitiesToInsert = request.amenities.map(amenity => ({
-        venue_id: venue.id,
-        amenity
-      }));
-      
-      if (amenitiesToInsert.length > 0) {
+      // Then, add amenities to venue_amenities table
+      if (request.amenities.length > 0) {
+        const amenitiesToInsert = request.amenities.map(amenity => ({
+          venue_id: venueData.id,
+          amenity
+        }));
+        
         const { error: amenitiesError } = await supabase
           .from('venue_amenities')
           .insert(amenitiesToInsert);
-        
+          
         if (amenitiesError) throw amenitiesError;
       }
       
-      // Step 4: Update the status of the venue request
+      // Finally, update the request status to 'approved'
       const { error: updateError } = await supabase
         .from('venue_requests')
         .update({ status: 'approved' })
         .eq('id', request.id);
-      
+        
       if (updateError) throw updateError;
-      
-      // Update the local state
-      setRequests(requests.map(req => 
-        req.id === request.id ? { ...req, status: 'approved' } : req
-      ));
-      
+
+      // Update local state
+      setVenueRequests(prev => 
+        prev.filter(req => req.id !== request.id)
+      );
+
       toast({
-        title: 'Venue Approved',
-        description: 'The venue has been approved and listed successfully',
-        variant: 'default',
+        title: 'Venue Request Approved',
+        description: `${request.name} has been added to venues.`
       });
+
     } catch (error) {
       console.error('Error approving venue request:', error);
       toast({
@@ -150,27 +149,34 @@ const AdminVenueRequests = () => {
         description: 'Failed to approve venue request',
         variant: 'destructive',
       });
+    } finally {
+      setProcessingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(request.id);
+        return updated;
+      });
     }
   };
-  
-  const handleReject = async (requestId: string) => {
+
+  const rejectVenueRequest = async (requestId: string) => {
     try {
+      setProcessingIds(prev => new Set(prev).add(requestId));
+      
       const { error } = await supabase
         .from('venue_requests')
         .update({ status: 'rejected' })
         .eq('id', requestId);
-      
+
       if (error) throw error;
-      
-      // Update the local state
-      setRequests(requests.map(req => 
-        req.id === requestId ? { ...req, status: 'rejected' } : req
-      ));
-      
+
+      // Update local state
+      setVenueRequests(prev => 
+        prev.filter(req => req.id !== requestId)
+      );
+
       toast({
-        title: 'Venue Rejected',
-        description: 'The venue request has been rejected',
-        variant: 'default',
+        title: 'Venue Request Rejected',
+        description: 'The venue request has been rejected.'
       });
     } catch (error) {
       console.error('Error rejecting venue request:', error);
@@ -179,217 +185,153 @@ const AdminVenueRequests = () => {
         description: 'Failed to reject venue request',
         variant: 'destructive',
       });
+    } finally {
+      setProcessingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(requestId);
+        return updated;
+      });
     }
   };
-  
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
-      case 'approved':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
+
   if (loading) {
-    return <div className="text-center py-8">Loading venue requests...</div>;
-  }
-  
-  if (requests.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">No venue requests found.</p>
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sportyfi-orange"></div>
       </div>
     );
   }
-  
-  const pendingRequests = requests.filter(req => req.status === 'pending');
-  const otherRequests = requests.filter(req => req.status !== 'pending');
-  
-  return (
-    <div className="space-y-6">
-      {pendingRequests.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-muted-foreground">No pending venue requests.</p>
+
+  if (venueRequests.length === 0) {
+    return (
+      <Card className="border-dashed bg-muted/50">
+        <div className="flex flex-col items-center justify-center py-10">
+          <MapPin className="h-10 w-10 text-muted-foreground mb-3" />
+          <p className="text-muted-foreground text-lg mb-1">No pending venue requests</p>
+          <p className="text-muted-foreground text-sm">All venue requests have been processed</p>
         </div>
-      ) : (
-        pendingRequests.map((request) => (
-          <Card key={request.id} className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{request.name}</CardTitle>
-                  <CardDescription className="mt-1">{request.location}</CardDescription>
-                </div>
-                {renderStatusBadge(request.status)}
+      </Card>
+    );
+  }
+
+  return (
+    <Accordion type="single" collapsible className="space-y-4">
+      {venueRequests.map((request) => (
+        <AccordionItem 
+          key={request.id} 
+          value={request.id}
+          className="border rounded-lg overflow-hidden"
+        >
+          <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
+            <div className="flex flex-col items-start text-left">
+              <div className="font-medium">{request.name}</div>
+              <div className="text-sm text-muted-foreground flex items-center mt-1">
+                <MapPin className="h-3 w-3 mr-1" />
+                {request.location}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Price</p>
-                  <p>₹{request.price_per_hour}/hour</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Owner</p>
-                  <p>{request.owner?.username || 'Unknown'}</p>
-                  <p className="text-sm text-muted-foreground">{request.owner?.email || 'No email'}</p>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="grid gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-1">Description</h4>
+                <p className="text-sm text-muted-foreground">
+                  {request.description || 'No description provided'}
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-1">Price</h4>
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <IndianRupee className="h-3 w-3 mr-1" />
+                  {request.price_per_hour} per hour
                 </div>
               </div>
               
-              <Button
-                variant="outline" 
-                onClick={() => toggleExpand(request.id)}
-                className="w-full flex items-center justify-center gap-1"
-              >
-                {expandedId === request.id ? (
-                  <>
-                    <ChevronUp className="h-4 w-4" />
-                    <span>Show Less</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-4 w-4" />
-                    <span>Show More</span>
-                  </>
-                )}
-              </Button>
-              
-              {expandedId === request.id && (
-                <div className="mt-4 space-y-4">
-                  <Separator />
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Description</p>
-                    <p className="text-sm text-muted-foreground">
-                      {request.description || 'No description provided'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Sports</p>
-                    <div className="flex flex-wrap gap-1">
-                      {request.sports.map((sport, index) => (
-                        <Badge key={index} variant="outline">{sport}</Badge>
-                      ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Contact</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="flex items-center">
+                      <Mail className="h-3 w-3 mr-1" />
+                      {request.contact_email}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Amenities</p>
-                    <div className="flex flex-wrap gap-1">
-                      {request.amenities.map((amenity, index) => (
-                        <Badge key={index} variant="outline">{amenity}</Badge>
-                      ))}
+                    <div className="flex items-center">
+                      <Phone className="h-3 w-3 mr-1" />
+                      {request.contact_phone}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Contact Information</p>
-                    <p className="text-sm text-muted-foreground">Email: {request.contact_email}</p>
-                    <p className="text-sm text-muted-foreground">Phone: {request.contact_phone}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium mb-1">Request Date</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(request.created_at).toLocaleString()}
-                    </p>
                   </div>
                 </div>
-              )}
-            </CardContent>
-            
-            <CardFooter className="pt-0">
-              <div className="flex gap-3 w-full">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" className="flex-1">
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Reject Venue Request</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to reject this venue request? This action can't be undone.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => {}}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => handleReject(request.id)}
-                      >
-                        Reject Request
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
                 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="default" className="flex-1">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Approve
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Approve Venue Request</DialogTitle>
-                      <DialogDescription>
-                        Approving will create a new venue listing with all the details from this request.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => {}}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        onClick={() => handleApprove(request)}
-                      >
-                        Approve and List
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Requested By</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {request.owner_name || 'Unknown User'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(request.created_at), 'PPP')}
+                  </p>
+                </div>
               </div>
-            </CardFooter>
-          </Card>
-        ))
-      )}
-      
-      {otherRequests.length > 0 && (
-        <>
-          <Separator className="my-6" />
-          <h3 className="text-lg font-medium mb-4">Processed Requests</h3>
-          
-          <div className="space-y-4">
-            {otherRequests.map((request) => (
-              <Card key={request.id}>
-                <CardHeader className="py-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-base">{request.name}</CardTitle>
-                      <CardDescription>{request.location}</CardDescription>
-                    </div>
-                    {renderStatusBadge(request.status)}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Sports</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {request.sports.map((sport, index) => (
+                      <Badge key={index} variant="outline">
+                        {sport}
+                      </Badge>
+                    ))}
+                    {request.sports.length === 0 && (
+                      <span className="text-sm text-muted-foreground">None specified</span>
+                    )}
                   </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Amenities</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {request.amenities.map((amenity, index) => (
+                      <Badge key={index} variant="outline">
+                        {amenity}
+                      </Badge>
+                    ))}
+                    {request.amenities.length === 0 && (
+                      <span className="text-sm text-muted-foreground">None specified</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => rejectVenueRequest(request.id)}
+                  disabled={processingIds.has(request.id)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Reject
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => approveVenueRequest(request)}
+                  disabled={processingIds.has(request.id)}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
   );
 };
 

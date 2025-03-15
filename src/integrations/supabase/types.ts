@@ -132,6 +132,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           id: string
+          role: string | null
           updated_at: string
           username: string | null
         }
@@ -139,6 +140,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id: string
+          role?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -146,6 +148,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          role?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -173,6 +176,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "venue_amenities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_favorites_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
@@ -259,6 +291,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      venue_reviews: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          rating: number
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          rating: number
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          rating?: number
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_reviews_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       venue_sports: {
         Row: {
