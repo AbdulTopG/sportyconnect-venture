@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock, Share2, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Share2, Copy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,7 +18,6 @@ type Host = {
   email?: string;
 };
 
-// Extend the Participant type to include user profile info we'll fetch
 type ParticipantWithProfile = Participant & {
   profile?: {
     username?: string | null;
@@ -40,7 +38,6 @@ const MatchDetail = () => {
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [host, setHost] = useState<Host | null>(null);
   
-  // Fetch match details
   useEffect(() => {
     const fetchMatchDetails = async () => {
       if (!id) return;
@@ -49,7 +46,6 @@ const MatchDetail = () => {
       setError(null);
       
       try {
-        // Fetch match
         const { data: matchData, error: matchError } = await supabase
           .from('matches')
           .select('*')
@@ -64,7 +60,6 @@ const MatchDetail = () => {
         
         setMatch(matchData);
         
-        // Fetch participants
         const { data: participantsData, error: participantsError } = await supabase
           .from('participants')
           .select('*')
@@ -78,7 +73,6 @@ const MatchDetail = () => {
         
         console.log("Participants fetched:", participantsData);
         
-        // For each participant, fetch their profile info
         if (participantsData && participantsData.length > 0) {
           const enhancedParticipants: ParticipantWithProfile[] = [];
           
@@ -98,7 +92,6 @@ const MatchDetail = () => {
               });
             } catch (err) {
               console.error("Error fetching profile for participant:", err);
-              // Still add participant even if profile fetch fails
               enhancedParticipants.push({
                 ...participant,
                 profile: { username: null }
@@ -111,7 +104,6 @@ const MatchDetail = () => {
           setParticipants([]);
         }
         
-        // Fetch host details
         if (matchData.host_id) {
           const { data: hostData, error: hostError } = await supabase
             .from('profiles')
@@ -119,7 +111,7 @@ const MatchDetail = () => {
             .eq('id', matchData.host_id)
             .maybeSingle();
           
-          if (hostError && hostError.code !== 'PGRST116') { // PGRST116 is "No rows returned" error
+          if (hostError && hostError.code !== 'PGRST116') {
             console.error("Error fetching host:", hostError);
           } else if (hostData) {
             setHost({
@@ -127,7 +119,6 @@ const MatchDetail = () => {
               username: hostData.username || undefined
             });
           } else {
-            // If no profile found, just use the host_id
             setHost({
               id: matchData.host_id
             });
@@ -144,7 +135,6 @@ const MatchDetail = () => {
     fetchMatchDetails();
   }, [id]);
 
-  // Check if user is already a participant
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
   const matchIsFull = match?.available_slots === 0;
   const isHost = user && match && user.id === match.host_id;
@@ -165,7 +155,6 @@ const MatchDetail = () => {
     setIsJoining(true);
     
     try {
-      // Insert participant record
       const { data, error } = await supabase
         .from('participants')
         .insert([
@@ -180,7 +169,6 @@ const MatchDetail = () => {
       
       console.log("Successfully joined match:", data);
       
-      // Update match available slots
       const { error: updateError } = await supabase
         .from('matches')
         .update({ available_slots: match.available_slots - 1 })
@@ -188,20 +176,17 @@ const MatchDetail = () => {
       
       if (updateError) {
         console.error("Error updating match slots:", updateError);
-        // Don't throw here, the user has already joined
         toast({
           title: "Warning",
           description: "You've joined the match, but there was an issue updating the available slots.",
           variant: "destructive",
         });
       } else {
-        // Update local state
         setMatch(prev => prev ? {
           ...prev,
           available_slots: prev.available_slots - 1
         } : null);
         
-        // Add the new participant to the list
         if (data && data[0]) {
           const newParticipant = data[0] as Participant;
           setParticipants(prev => [...prev, {
@@ -233,7 +218,6 @@ const MatchDetail = () => {
     setIsJoining(true);
     
     try {
-      // Delete participant record
       const { error } = await supabase
         .from('participants')
         .delete()
@@ -245,7 +229,6 @@ const MatchDetail = () => {
         throw error;
       }
       
-      // Update match available slots
       const { error: updateError } = await supabase
         .from('matches')
         .update({ available_slots: match.available_slots + 1 })
@@ -253,20 +236,17 @@ const MatchDetail = () => {
       
       if (updateError) {
         console.error("Error updating match slots:", updateError);
-        // Don't throw here, the user has already left
         toast({
           title: "Warning",
           description: "You've left the match, but there was an issue updating the available slots.",
           variant: "destructive",
         });
       } else {
-        // Update local state
         setMatch(prev => prev ? {
           ...prev,
           available_slots: prev.available_slots + 1
         } : null);
         
-        // Remove the participant from the list
         setParticipants(prev => prev.filter(p => p.user_id !== user.id));
       }
       
@@ -286,22 +266,43 @@ const MatchDetail = () => {
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${match?.sport} Match`,
-        text: `Join me for a ${match?.sport} match at ${match?.location}!`,
-        url: window.location.href,
-      })
-      .then(() => console.log('Successful share'))
-      .catch((error) => console.log('Error sharing:', error));
-    } else {
-      // Fallback for browsers that don't support the Web Share API
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied!",
-        description: "Share it with your friends to invite them.",
-      });
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const shareTitle = `${match?.sport} Match`;
+    const shareText = `Join me for a ${match?.sport} match at ${match?.location}!`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        console.log('Successfully shared');
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Share it with your friends to invite them.",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Share it with your friends to invite them.",
+        });
+      } catch (clipboardError) {
+        console.error('Clipboard error:', clipboardError);
+        toast({
+          title: "Sharing failed",
+          description: "Could not share or copy the link.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -347,7 +348,6 @@ const MatchDetail = () => {
       <main className="flex-grow py-8">
         <div className="sportyfi-container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Match Details */}
             <div className="lg:col-span-2 sportyfi-card">
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -421,13 +421,16 @@ const MatchDetail = () => {
                   variant="outline"
                   className="w-full"
                 >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
+                  {navigator.share ? (
+                    <Share2 className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  {navigator.share ? "Share" : "Copy Link"}
                 </Button>
               </div>
             </div>
             
-            {/* Host and Participants */}
             <div className="lg:col-span-1 space-y-6">
               <div className="sportyfi-card">
                 <h2 className="text-lg font-semibold mb-4">Host</h2>
