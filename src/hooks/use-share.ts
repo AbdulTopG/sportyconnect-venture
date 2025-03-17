@@ -12,9 +12,11 @@ interface ShareOptions {
 export const useShare = () => {
   const [isSharing, setIsSharing] = useState(false);
   const [canShare, setCanShare] = useState(false);
+  const [canCopy, setCanCopy] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    // Check for share capability
     try {
       setCanShare(
         typeof navigator !== 'undefined' && 
@@ -25,6 +27,18 @@ export const useShare = () => {
       console.error('Error checking share support:', error);
       setCanShare(false);
     }
+
+    // Check for clipboard capability
+    try {
+      setCanCopy(
+        typeof navigator !== 'undefined' && 
+        !!navigator.clipboard && 
+        typeof navigator.clipboard.writeText === 'function'
+      );
+    } catch (error) {
+      console.error('Error checking clipboard support:', error);
+      setCanCopy(false);
+    }
   }, []);
 
   const shareContent = async (url: string, options: ShareOptions = {}) => {
@@ -33,53 +47,62 @@ export const useShare = () => {
     setIsSharing(true);
     
     try {
-      // First try to copy to clipboard - most reliable method across all devices
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(url);
-        toast({
-          title: "Link copied!",
-          description: "The link has been copied to your clipboard.",
-        });
-        
-        // On mobile, also try to use the share API if available
-        if (canShare && isMobile) {
-          try {
-            const shareData = { title, text, url };
-            if (navigator.canShare(shareData)) {
-              await navigator.share(shareData);
-            }
-          } catch (shareError) {
-            console.log('Native sharing attempted but not critical if it fails');
-            // Ignore share errors since we already copied to clipboard
-          }
-        }
-        
-        return true;
-      }
-      // If clipboard fails, try native sharing (mobile)
-      else if (canShare) {
-        const shareData = { title, text, url };
-        
-        if (navigator.canShare(shareData)) {
-          await navigator.share(shareData);
+      // Try clipboard first - most reliable across browsers/devices
+      if (canCopy) {
+        try {
+          await navigator.clipboard.writeText(url);
           toast({
-            title: "Shared successfully!",
-            description: "The content has been shared.",
+            title: "Link copied!",
+            description: "The link has been copied to your clipboard.",
           });
+          
+          // If on mobile and share is available, also offer native sharing
+          if (canShare && isMobile) {
+            try {
+              const shareData = { title, text, url };
+              if (navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+              }
+            } catch (shareError) {
+              console.log('Native sharing attempted but not critical if it fails');
+              // Already notified user via clipboard toast
+            }
+          }
+          
           return true;
-        } else {
-          throw new Error('Content cannot be shared');
+        } catch (clipboardError) {
+          console.error('Clipboard access error:', clipboardError);
+          // If clipboard fails, try native sharing next
         }
-      } 
-      // Last resort - alert the user to copy manually
-      else {
-        toast({
-          title: "Cannot share automatically",
-          description: "Please copy this link manually: " + url,
-          duration: 5000,
-        });
-        return false;
       }
+      
+      // Try native sharing if clipboard isn't available or failed
+      if (canShare) {
+        try {
+          const shareData = { title, text, url };
+          
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            toast({
+              title: "Shared successfully!",
+              description: "The content has been shared.",
+            });
+            return true;
+          }
+        } catch (shareError) {
+          console.error('Share API error:', shareError);
+          // Try manual fallback next
+        }
+      }
+      
+      // Last resort - inform user to copy manually
+      toast({
+        title: "Cannot share automatically",
+        description: "Please copy this link manually: " + url,
+        duration: 5000,
+      });
+      
+      return false;
     } catch (error) {
       console.error('Error sharing content:', error);
       
@@ -98,6 +121,7 @@ export const useShare = () => {
   return {
     shareContent,
     isSharing,
-    canShare
+    canShare,
+    canCopy
   };
 };

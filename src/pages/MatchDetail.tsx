@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -7,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock, Share2, Copy, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, Copy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useShare } from '@/hooks/use-share';
 import { supabase, Match, Participant } from '@/integrations/supabase/client';
 
 type Host = {
@@ -30,34 +29,14 @@ const MatchDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { shareContent, isSharing } = useShare();
   const [isJoining, setIsJoining] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCopying, setIsCopying] = useState(false);
-  const [canShare, setCanShare] = useState(false);
-  const isMobile = useIsMobile();
   
   const [match, setMatch] = useState<Match | null>(null);
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [host, setHost] = useState<Host | null>(null);
-  
-  useEffect(() => {
-    const checkShareSupport = () => {
-      try {
-        // Only set canShare to true if both share API and canShare method exist
-        setCanShare(
-          typeof navigator !== 'undefined' && 
-          !!navigator.share && 
-          typeof navigator.canShare === 'function'
-        );
-      } catch (error) {
-        console.error('Error checking share support:', error);
-        setCanShare(false);
-      }
-    };
-
-    checkShareSupport();
-  }, []);
 
   useEffect(() => {
     const fetchMatchDetails = async () => {
@@ -292,45 +271,11 @@ const MatchDetail = () => {
     const shareTitle = match ? `${match.sport} Match` : 'Sport Match';
     const shareText = match ? `Join me for a ${match.sport} match at ${match.location}!` : 'Join me for a match!';
     
-    setIsCopying(true);
-    
-    try {
-      // Use clipboard API as the primary method since it's more widely supported
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Share it with your friends to invite them.",
-      });
-      
-      // Only attempt to use Web Share API as a fallback for mobile
-      if (canShare && isMobile) {
-        try {
-          const shareData = {
-            title: shareTitle,
-            text: shareText,
-            url: shareUrl,
-          };
-          
-          if (navigator.canShare(shareData)) {
-            await navigator.share(shareData);
-            console.log('Successfully shared');
-          }
-        } catch (shareError) {
-          console.error('Share API error (non-critical):', shareError);
-          // No need to show an error toast since clipboard already worked
-        }
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      
-      toast({
-        title: "Sharing failed",
-        description: "Could not copy the link. Try manually copying the URL from your browser.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCopying(false);
-    }
+    await shareContent(shareUrl, {
+      title: shareTitle,
+      text: shareText,
+      fallbackToClipboard: true
+    });
   };
 
   if (isLoading) {
@@ -447,14 +392,14 @@ const MatchDetail = () => {
                   onClick={handleShare}
                   variant="outline"
                   className="w-full"
-                  disabled={isCopying}
+                  disabled={isSharing}
                 >
-                  {isCopying ? (
+                  {isSharing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Copy className="h-4 w-4 mr-2" />
                   )}
-                  {isCopying ? "Processing..." : "Copy Link"}
+                  {isSharing ? "Processing..." : "Copy Link"}
                 </Button>
               </div>
             </div>
