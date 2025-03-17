@@ -1,16 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, Clock, Copy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useShare } from '@/hooks/use-share';
 import { supabase, Match, Participant } from '@/integrations/supabase/client';
+
+// Import refactored components
+import MatchInfo from '@/components/match/MatchInfo';
+import MatchActions from '@/components/match/MatchActions';
+import HostInfo from '@/components/match/HostInfo';
+import ParticipantsList from '@/components/match/ParticipantsList';
+import LoadingState from '@/components/match/LoadingState';
+import ErrorState from '@/components/match/ErrorState';
 
 type Host = {
   id: string;
@@ -283,10 +287,7 @@ const MatchDetail = () => {
       <div className="min-h-screen flex flex-col">
         <SportyFiHeader />
         <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-xl">Loading match details...</p>
-          </div>
+          <LoadingState />
         </main>
         <Footer />
       </div>
@@ -298,15 +299,7 @@ const MatchDetail = () => {
       <div className="min-h-screen flex flex-col">
         <SportyFiHeader />
         <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-xl text-red-600">{error || "Match not found"}</p>
-            <Button 
-              className="mt-4"
-              onClick={() => navigate('/matches')}
-            >
-              Back to Matches
-            </Button>
-          </div>
+          <ErrorState error={error} navigate={navigate} />
         </main>
         <Footer />
       </div>
@@ -321,122 +314,24 @@ const MatchDetail = () => {
         <div className="sportyfi-container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 sportyfi-card">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h1 className="text-2xl font-bold mb-2">{match.sport.charAt(0).toUpperCase() + match.sport.slice(1)} Match</h1>
-                  <div className="flex items-center text-gray-600 mb-1">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span>{match.location}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center text-gray-600 gap-2">
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>{new Date(match.match_time).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 ml-0 mr-1" />
-                      <span>{new Date(match.match_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  </div>
-                </div>
-                <Badge className={match.available_slots > 0 ? "bg-green-500" : "bg-red-500"}>
-                  {match.available_slots > 0 
-                    ? `${match.available_slots} spots left` 
-                    : "Match Full"}
-                </Badge>
-              </div>
+              <MatchInfo match={match} />
               
-              <Separator className="my-4" />
-              
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">About this match</h2>
-                <div className="mb-2">
-                  <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded">
-                    {match.skill_level}
-                  </span>
-                </div>
-                <p className="text-gray-700">{match.description || "No description provided."}</p>
-              </div>
-              
-              <div className="mb-6">
-                <div className="flex items-center mb-2">
-                  <Users className="h-5 w-5 mr-2" />
-                  <h2 className="text-lg font-semibold">Team Size: {match.team_size} players</h2>
-                </div>
-                <p className="text-gray-700">
-                  {match.team_size - match.available_slots} joined, {match.available_slots} spots remaining
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                {userIsParticipant ? (
-                  <Button 
-                    onClick={handleLeaveMatch}
-                    disabled={isJoining}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    {isJoining ? "Processing..." : "Leave Match"}
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleJoinMatch}
-                    disabled={isJoining || matchIsFull || isHost}
-                    className={`w-full ${!matchIsFull && !isHost ? "bg-sportyfi-orange hover:bg-red-600 text-white" : ""}`}
-                  >
-                    {isJoining ? "Joining..." : isHost ? "You're the host" : matchIsFull ? "Match Full" : "Join This Match"}
-                  </Button>
-                )}
-                
-                <Button 
-                  onClick={handleShare}
-                  variant="outline"
-                  className="w-full"
-                  disabled={isSharing}
-                >
-                  {isSharing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-2" />
-                  )}
-                  {isSharing ? "Processing..." : "Copy Link"}
-                </Button>
-              </div>
+              <MatchActions
+                match={match}
+                userIsParticipant={userIsParticipant}
+                isJoining={isJoining}
+                matchIsFull={matchIsFull}
+                isHost={isHost}
+                isSharing={isSharing}
+                handleJoinMatch={handleJoinMatch}
+                handleLeaveMatch={handleLeaveMatch}
+                handleShare={handleShare}
+              />
             </div>
             
             <div className="lg:col-span-1 space-y-6">
-              <div className="sportyfi-card">
-                <h2 className="text-lg font-semibold mb-4">Host</h2>
-                <div className="flex items-center">
-                  <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src={''} />
-                    <AvatarFallback>{host?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{host?.username || 'Anonymous Host'}</p>
-                    <p className="text-sm text-gray-500">Host</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="sportyfi-card">
-                <h2 className="text-lg font-semibold mb-4">Participants ({participants.length})</h2>
-                {participants.length > 0 ? (
-                  <div className="space-y-3">
-                    {participants.map(participant => (
-                      <div key={participant.id} className="flex items-center">
-                        <Avatar className="h-10 w-10 mr-3">
-                          <AvatarImage src={''} />
-                          <AvatarFallback>{participant.profile?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-medium">{participant.profile?.username || 'Anonymous User'}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No participants have joined yet.</p>
-                )}
-              </div>
+              <HostInfo host={host} />
+              <ParticipantsList participants={participants} />
             </div>
           </div>
         </div>
