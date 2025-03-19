@@ -6,6 +6,7 @@ interface Host {
   id: string;
   username?: string;
   email?: string;
+  avatar_url?: string;
 }
 
 interface HostInfoProps {
@@ -18,8 +19,8 @@ const HostInfo = ({ host }: HostInfoProps) => {
       <h2 className="text-lg font-semibold mb-4">Host</h2>
       <div className="flex items-center">
         <Avatar className="h-10 w-10 mr-3">
-          <AvatarImage src={''} />
-          <AvatarFallback>{host?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+          <AvatarImage src={host?.avatar_url || ''} />
+          <AvatarFallback className="bg-sportyfi-orange text-white">{host?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
         <div>
           <p className="font-medium">{host?.username || 'Anonymous Host'}</p>

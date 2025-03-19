@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigateFunction } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 
 interface ErrorStateProps {
   error: string | null;
@@ -10,10 +11,11 @@ interface ErrorStateProps {
 
 const ErrorState = ({ error, navigate }: ErrorStateProps) => {
   return (
-    <div className="text-center">
-      <p className="text-xl text-red-600">{error || "Match not found"}</p>
+    <div className="text-center py-8">
+      <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+      <p className="text-xl text-red-600 mb-4">{error || "Match not found"}</p>
       <Button 
-        className="mt-4"
+        className="bg-sportyfi-orange hover:bg-red-600"
         onClick={() => navigate('/matches')}
       >
         Back to Matches

@@ -127,27 +127,111 @@ export type Database = {
           },
         ]
       }
+      player_achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      player_stats: {
+        Row: {
+          created_at: string | null
+          goals_scored: number | null
+          id: string
+          matches_lost: number | null
+          matches_played: number | null
+          matches_won: number | null
+          mvp_count: number | null
+          performance_rating: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          goals_scored?: number | null
+          id?: string
+          matches_lost?: number | null
+          matches_played?: number | null
+          matches_won?: number | null
+          mvp_count?: number | null
+          performance_rating?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          goals_scored?: number | null
+          id?: string
+          matches_lost?: number | null
+          matches_played?: number | null
+          matches_won?: number | null
+          mvp_count?: number | null
+          performance_rating?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           id: string
+          location: string | null
+          preferred_sports: string[] | null
+          primary_sport: string | null
           role: string | null
           updated_at: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           id: string
+          location?: string | null
+          preferred_sports?: string[] | null
+          primary_sport?: string | null
           role?: string | null
           updated_at?: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           id?: string
+          location?: string | null
+          preferred_sports?: string[] | null
+          primary_sport?: string | null
           role?: string | null
           updated_at?: string
           username?: string | null
