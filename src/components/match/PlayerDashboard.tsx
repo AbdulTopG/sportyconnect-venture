@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, User, Calendar, Activity, Settings } from 'lucide-react';
-import ProfileHeader from '@/components/profile/ProfileHeader';
+import ProfileHeader from '@/components/match/ProfileHeader';
 import PlayerStats from './PlayerStats';
 import PlayerAchievements from './PlayerAchievements';
 import UpcomingMatchesList from './UpcomingMatchesList';
@@ -18,7 +18,8 @@ const PlayerDashboard = () => {
     playerStats, 
     achievements, 
     upcomingMatches,
-    loading
+    loading,
+    refreshProfileData
   } = useProfileData();
   
   const isMobile = useIsMobile();
