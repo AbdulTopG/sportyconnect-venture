@@ -22,6 +22,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(tabParam === 'signup' ? 'signup' : 'signin');
   const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isSubmittingPhone, setIsSubmittingPhone] = useState(false);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -29,6 +30,8 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+    
     setError(null);
 
     try {
@@ -48,7 +51,10 @@ const Auth = () => {
 
   const handlePhoneAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingPhone) return;
+    
     setError(null);
+    setIsSubmittingPhone(true);
 
     try {
       if (!showOtpInput) {
@@ -63,10 +69,14 @@ const Auth = () => {
       } else {
         setError('An unexpected error occurred');
       }
+    } finally {
+      setIsSubmittingPhone(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (isLoading) return;
+    
     setError(null);
     try {
       await signInWithGoogle();
@@ -139,16 +149,10 @@ const Auth = () => {
               <Button
                 type="submit"
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
-                disabled={isLoading}
+                isLoading={isLoading}
+                loadingText="Signing in..."
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign in'
-                )}
+                Sign in
               </Button>
             </form>
 
@@ -234,19 +238,11 @@ const Auth = () => {
                   type="submit"
                   variant="outline"
                   className="w-full flex items-center justify-center"
-                  disabled={isLoading}
+                  isLoading={isSubmittingPhone}
+                  loadingText={showOtpInput ? "Verifying..." : "Sending code..."}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {showOtpInput ? 'Verifying...' : 'Sending code...'}
-                    </>
-                  ) : (
-                    <>
-                      <Phone className="mr-2 h-4 w-4" />
-                      {showOtpInput ? 'Verify code' : 'Continue with phone'}
-                    </>
-                  )}
+                  <Phone className="mr-2 h-4 w-4" />
+                  {showOtpInput ? 'Verify code' : 'Continue with phone'}
                 </Button>
               </form>
             </div>
@@ -291,58 +287,7 @@ const Auth = () => {
               <Button
                 type="submit"
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Create account'
-                )}
-              </Button>
-            </form>
+                isLoading={isLoading}
+                loadingText="Creating account..."
+             
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => signInWithGoogle()}
-                  disabled={isLoading}
-                >
-                  <FcGoogle className="mr-2 h-5 w-5" />
-                  Google
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => signInWithApple()}
-                  disabled={isLoading}
-                >
-                  <Apple className="mr-2 h-5 w-5" />
-                  Apple
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
-};
-
-export default Auth;

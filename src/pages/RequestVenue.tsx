@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -61,6 +60,9 @@ const RequestVenue = () => {
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (isPending) return;
     
     // Validate form
     const newErrors: Record<string, string> = {};
@@ -419,14 +421,16 @@ const RequestVenue = () => {
                       type="button" 
                       variant="outline"
                       onClick={() => navigate('/venues')}
+                      disabled={isPending}
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit"
-                      disabled={isPending}
+                      isLoading={isPending}
+                      loadingText="Submitting..."
                     >
-                      {isPending ? 'Submitting...' : 'Submit Venue Request'}
+                      Submit Venue Request
                     </Button>
                   </div>
                 </div>

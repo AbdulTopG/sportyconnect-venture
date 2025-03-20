@@ -64,6 +64,9 @@ export function useAvatarUpload() {
   
   // Main upload function
   const handleAvatarUpload = async (userId: string, onSuccess?: (url: string) => void) => {
+    // Prevent duplicate submissions
+    if (isUploading) return;
+    
     if (!selectedFile || !userId) {
       toast({
         title: "No file selected",
@@ -94,6 +97,11 @@ export function useAvatarUpload() {
       if (onSuccess) {
         onSuccess(cacheBustedUrl);
       }
+      
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated successfully",
+      });
       
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
