@@ -2,10 +2,10 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserActivityFeed from './UserActivityFeed';
-import { PlayerStats } from '@/components/match/PlayerStats';
-import { UpcomingMatchesList } from '@/components/match/UpcomingMatchesList';
-import { PlayerAchievements } from '@/components/match/PlayerAchievements';
-import { ProfileEditForm } from '@/components/match/ProfileEditForm';
+import PlayerStats from '@/components/match/PlayerStats';
+import UpcomingMatchesList from '@/components/match/UpcomingMatchesList';
+import PlayerAchievements from '@/components/match/PlayerAchievements';
+import ProfileEditForm from '@/components/match/ProfileEditForm';
 import { useAuth } from '@/context/AuthContext';
 
 type ProfileTab = 'activity' | 'stats' | 'matches' | 'achievements' | 'edit';
