@@ -64,7 +64,14 @@ export function useAvatarUpload() {
   
   // Main upload function
   const handleAvatarUpload = async (userId: string, onSuccess?: (url: string) => void) => {
-    if (!selectedFile || !userId) return;
+    if (!selectedFile || !userId) {
+      toast({
+        title: "No file selected",
+        description: "Please select an image to upload",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsUploading(true);
     
@@ -80,11 +87,6 @@ export function useAvatarUpload() {
       
       // Update the user's profile with the new avatar URL
       await updateProfile(userId, { avatar_url: avatarUrl });
-      
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully",
-      });
       
       // Clear the current selection
       clearSelection();

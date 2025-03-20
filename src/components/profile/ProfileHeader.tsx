@@ -8,6 +8,7 @@ import { MapPin, Camera, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useProfileData } from '@/hooks/use-profile-data';
 import { useAvatarUpload } from '@/hooks/use-avatar-upload';
+import { toast } from '@/hooks/use-toast';
 
 interface ProfileHeaderProps {
   user: {
@@ -54,13 +55,25 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
   };
   
   const uploadAvatar = async () => {
-    if (!authUser) return;
+    if (!authUser) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to upload an avatar",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    await handleAvatarUpload(authUser.id, () => {
+    await handleAvatarUpload(authUser.id, (url) => {
       // Refresh profile data to show the updated avatar
       refreshProfileData();
       // Close dialog
       setShowUploadDialog(false);
+      
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated successfully"
+      });
     });
   };
   
@@ -69,11 +82,14 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
     setShowUploadDialog(false);
   };
 
+  // Add cache-busting parameter to avatar URL
+  const avatarUrl = user.avatar_url ? `${user.avatar_url}?t=${Date.now()}` : '';
+
   return (
     <div className="sportyfi-card flex flex-col items-center p-6">
       <div className="relative">
         <Avatar className="h-24 w-24 mb-4 border-2 border-sportyfi-orange">
-          <AvatarImage src={user.avatar_url || ''} />
+          <AvatarImage src={avatarUrl} />
           <AvatarFallback className="text-2xl bg-sportyfi-orange text-white">
             {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
           </AvatarFallback>
