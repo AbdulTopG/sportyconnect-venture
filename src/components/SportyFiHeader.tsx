@@ -102,12 +102,15 @@ const SportyFiHeader = () => {
                   asChild
                 >
                   <Link to="/auth">
-                    <LogIn size={18} />
+                    <User size={18} />
                     <span>Login</span>
                   </Link>
                 </Button>
                 
-                <Button className="bg-sportyfi-orange hover:bg-red-600 text-white" asChild>
+                <Button 
+                  className="bg-sportyfi-orange hover:bg-red-600 text-white" 
+                  asChild
+                >
                   <Link to="/auth?tab=signup">
                     Sign Up
                   </Link>
@@ -122,7 +125,6 @@ const SportyFiHeader = () => {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[80%] sm:w-[350px]">
@@ -137,7 +139,6 @@ const SportyFiHeader = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       <X className="h-5 w-5" />
-                      <span className="sr-only">Close</span>
                     </Button>
                   </div>
                   <nav className="flex flex-col space-y-4 py-6">
@@ -164,10 +165,7 @@ const SportyFiHeader = () => {
                           className="w-full flex items-center justify-center space-x-2"
                           asChild
                         >
-                          <Link
-                            to="/profile"
-                            onClick={() => setIsOpen(false)}
-                          >
+                          <Link to="/profile" onClick={() => setIsOpen(false)}>
                             <User size={18} />
                             <span>Profile</span>
                           </Link>
@@ -188,10 +186,7 @@ const SportyFiHeader = () => {
                           className="w-full flex items-center justify-center space-x-2"
                           asChild
                         >
-                          <Link
-                            to="/auth"
-                            onClick={() => setIsOpen(false)}
-                          >
+                          <Link to="/auth" onClick={() => setIsOpen(false)}>
                             <LogIn size={18} />
                             <span>Login</span>
                           </Link>
@@ -200,10 +195,7 @@ const SportyFiHeader = () => {
                           className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
                           asChild
                         >
-                          <Link
-                            to="/auth?tab=signup"
-                            onClick={() => setIsOpen(false)}
-                          >
+                          <Link to="/auth?tab=signup" onClick={() => setIsOpen(false)}>
                             Sign Up
                           </Link>
                         </Button>
