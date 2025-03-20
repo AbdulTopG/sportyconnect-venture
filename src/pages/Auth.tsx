@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
@@ -289,5 +290,15 @@ const Auth = () => {
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
                 isLoading={isLoading}
                 loadingText="Creating account..."
-             
+              >
+                Create account
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
 
+export default Auth;
