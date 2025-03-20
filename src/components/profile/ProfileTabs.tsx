@@ -34,7 +34,10 @@ const ProfileTabs = ({ activeTab, setActiveTab }: ProfileTabsProps) => {
                 <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sportyfi-orange"></div>
               </div>
             ) : profile ? (
-              <ProfileEditForm user={profile} onSave={handleSaveProfile} />
+              <ProfileEditForm 
+                user={profile} 
+                onSave={handleSaveProfile} 
+              />
             ) : (
               <p className="text-center text-muted-foreground">Unable to load profile</p>
             )}
