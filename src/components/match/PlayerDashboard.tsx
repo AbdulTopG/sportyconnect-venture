@@ -55,7 +55,7 @@ const PlayerDashboard = () => {
           
           {!isMobile && (
             <div className="mt-6">
-              <UserActivityFeed userId={profile.id} />
+              <UserActivityFeed />
             </div>
           )}
         </div>
@@ -82,7 +82,7 @@ const PlayerDashboard = () => {
             </TabsList>
             
             <TabsContent value="overview" className="space-y-6 mt-6">
-              {isMobile && <UserActivityFeed userId={profile.id} />}
+              {isMobile && <UserActivityFeed />}
               
               <PlayerStats 
                 stats={playerStats || {

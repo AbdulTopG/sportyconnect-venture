@@ -32,9 +32,6 @@ const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent duplicate submissions
-    if (isSubmitting) return;
-    
     // Validate form
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       toast({
@@ -221,11 +218,10 @@ const Contact = () => {
                 
                 <Button
                   type="submit"
-                  isLoading={isSubmitting}
-                  loadingText="Sending..."
+                  disabled={isSubmitting}
                   className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
                 >
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
               </form>
             </div>

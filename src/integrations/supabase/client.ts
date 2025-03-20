@@ -45,65 +45,32 @@ export type VenueWithRelations = Venue & {
 
 // Profile avatar helpers
 export async function uploadAvatar(userId: string, file: File) {
-  if (!userId) {
-    throw new Error('User ID is required for avatar upload');
-  }
-  
-  if (!file) {
-    throw new Error('File is required for avatar upload');
-  }
-  
   const fileExt = file.name.split('.').pop();
-  const timestamp = Date.now(); // Add timestamp for uniqueness and cache busting
-  const fileName = `${userId}-${timestamp}.${fileExt}`;
+  const fileName = `${userId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
   const filePath = `${fileName}`;
 
-  try {
-    const { error: uploadError, data: uploadData } = await supabase.storage
-      .from('profiles')
-      .upload(filePath, file, { upsert: true });
+  const { error: uploadError } = await supabase.storage
+    .from('profiles')
+    .upload(filePath, file, { upsert: true });
 
-    if (uploadError) {
-      console.error('Error uploading avatar:', uploadError);
-      throw new Error(uploadError.message || 'Failed to upload avatar');
-    }
-
-    if (!uploadData) {
-      throw new Error('No data returned from upload');
-    }
-
-    const { data } = supabase.storage
-      .from('profiles')
-      .getPublicUrl(filePath);
-
-    if (!data || !data.publicUrl) {
-      throw new Error('Failed to get public URL for avatar');
-    }
-
-    return data.publicUrl;
-  } catch (error) {
-    console.error('Exception during avatar upload:', error);
-    throw error;
+  if (uploadError) {
+    throw uploadError;
   }
+
+  const { data } = supabase.storage
+    .from('profiles')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
 }
 
 export async function updateProfile(userId: string, updates: Partial<Profile>) {
-  if (!userId) {
-    throw new Error('User ID is required for profile update');
-  }
-  
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId);
+  const { error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId);
 
-    if (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  } catch (error) {
-    console.error('Exception during profile update:', error);
+  if (error) {
     throw error;
   }
 }

@@ -1,21 +1,12 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
-// Define a profile type based on what's being used
-type Profile = {
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-};
-
 type AuthContextType = {
   user: User | null;
   session: Session | null;
-  profile: Profile | null; // Add profile to the type
   isLoading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -31,31 +22,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null); // Add profile state
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Function to fetch profile data
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return;
-      }
-      
-      if (data) {
-        setProfile(data);
-      }
-    } catch (err) {
-      console.error("Unexpected error fetching profile:", err);
-    }
-  };
 
   useEffect(() => {
     const getSession = async () => {
@@ -76,11 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Session data retrieved:", data.session ? "Session exists" : "No session");
         setSession(data.session);
         setUser(data.session?.user || null);
-        
-        // Fetch profile if user exists
-        if (data.session?.user?.id) {
-          await fetchProfile(data.session.user.id);
-        }
       } catch (err) {
         console.error("Unexpected error in getSession:", err);
       } finally {
@@ -91,17 +54,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user || null);
-        
-        // Update profile when auth state changes
-        if (currentSession?.user?.id) {
-          await fetchProfile(currentSession.user.id);
-        } else {
-          setProfile(null);
-        }
       }
     );
 
@@ -114,11 +70,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     
     try {
-      // Validate password strength on the server side as well
-      if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/.test(password)) {
-        throw new Error('Password must be at least 8 characters long and include uppercase, lowercase, number, and special character');
-      }
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -342,7 +293,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setUser(null);
       setSession(null);
-      setProfile(null); // Clear profile on sign out
       
       toast({
         title: "Signed out",
@@ -362,7 +312,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         session,
-        profile,
         isLoading,
         signUp,
         signIn,
