@@ -16,8 +16,8 @@ const ProfileTabs = ({ activeTab, setActiveTab }: ProfileTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="w-full max-w-md mx-auto">
-        <TabsTrigger value="dashboard" className="flex-1">Dashboard</TabsTrigger>
-        <TabsTrigger value="edit" className="flex-1">Edit Profile</TabsTrigger>
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <TabsTrigger value="edit">Edit Profile</TabsTrigger>
       </TabsList>
       
       <TabsContent value="dashboard">
