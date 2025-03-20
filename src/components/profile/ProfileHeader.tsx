@@ -1,14 +1,13 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Camera, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from '@/hooks/use-toast';
 import { useProfileData } from '@/hooks/use-profile-data';
+import { useAvatarUpload } from '@/hooks/use-avatar-upload';
 
 interface ProfileHeaderProps {
   user: {
@@ -25,42 +24,29 @@ interface ProfileHeaderProps {
 const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
   const { user: authUser } = useAuth();
   const { refreshProfileData } = useProfileData();
-  const [isUploading, setIsUploading] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const {
+    isUploading,
+    previewUrl,
+    handleFileSelect,
+    handleAvatarUpload,
+    clearSelection
+  } = useAvatarUpload();
   
   const canEdit = isEditable && authUser && authUser.id === user.id;
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB",
-        variant: "destructive"
-      });
-      return;
+    const file = e.target.files?.[0] || null;
+    if (file && handleFileSelect(file)) {
+      setShowUploadDialog(true);
     }
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
-        variant: "destructive"
-      });
-      return;
+    // Reset the file input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
-    
-    setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    setShowUploadDialog(true);
   };
   
   const triggerFileInput = () => {
@@ -68,67 +54,19 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
   };
   
   const uploadAvatar = async () => {
-    if (!selectedFile || !authUser) return;
+    if (!authUser) return;
     
-    setIsUploading(true);
-    
-    try {
-      // Create a unique file path
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${authUser.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, selectedFile);
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('profiles')
-        .getPublicUrl(filePath);
-        
-      if (!urlData) throw new Error("Failed to get public URL");
-      
-      // Update user profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: urlData.publicUrl })
-        .eq('id', authUser.id);
-        
-      if (updateError) throw updateError;
-      
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully",
-      });
-      
-      // Refresh profile data
+    await handleAvatarUpload(authUser.id, () => {
+      // Refresh profile data to show the updated avatar
       refreshProfileData();
-      
       // Close dialog
       setShowUploadDialog(false);
-      setPreviewUrl(null);
-      setSelectedFile(null);
-      
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast({
-        title: "Upload failed",
-        description: error.message || "There was an error uploading your avatar",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    });
   };
   
   const cancelUpload = () => {
+    clearSelection();
     setShowUploadDialog(false);
-    setPreviewUrl(null);
-    setSelectedFile(null);
   };
 
   return (

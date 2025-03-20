@@ -8,6 +8,8 @@ import { MapPin, Trophy, Upload, Loader2 } from 'lucide-react';
 import { Profile } from '@/integrations/supabase/client';
 import { useAvatarUpload } from '@/hooks/use-avatar-upload';
 import { useProfileData } from '@/hooks/use-profile-data';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from 'react';
 
 interface ProfileHeaderProps {
   user: Profile;
@@ -16,19 +18,26 @@ interface ProfileHeaderProps {
 
 const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isUploading, handleAvatarChange } = useAvatarUpload();
   const { refreshProfileData } = useProfileData();
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
   
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const {
+    isUploading,
+    previewUrl,
+    handleFileSelect,
+    handleAvatarUpload,
+    clearSelection
+  } = useAvatarUpload();
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    if (file) {
-      await handleAvatarChange(user.id, file, () => {
-        refreshProfileData();
-      });
-      // Reset the file input so the same file can be selected again if needed
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    if (file && handleFileSelect(file)) {
+      setShowUploadDialog(true);
+    }
+    
+    // Reset the file input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
   
@@ -36,6 +45,18 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
     if (isEditable && !isUploading) {
       fileInputRef.current?.click();
     }
+  };
+  
+  const uploadAvatar = async () => {
+    await handleAvatarUpload(user.id, () => {
+      refreshProfileData();
+      setShowUploadDialog(false);
+    });
+  };
+  
+  const cancelUpload = () => {
+    clearSelection();
+    setShowUploadDialog(false);
   };
   
   const getInitials = (name: string | null) => {
@@ -57,12 +78,6 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
                 {getInitials(user.username)}
               </AvatarFallback>
             </Avatar>
-            
-            {isUploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
-                <Loader2 className="h-8 w-8 text-white animate-spin" />
-              </div>
-            )}
             
             {isEditable && !isUploading && (
               <button 
@@ -128,6 +143,38 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
           )}
         </div>
       </CardContent>
+      
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update profile picture</DialogTitle>
+          </DialogHeader>
+          
+          {previewUrl && (
+            <div className="flex justify-center p-4">
+              <img 
+                src={previewUrl} 
+                alt="Preview" 
+                className="max-h-[300px] max-w-full object-contain rounded-md"
+              />
+            </div>
+          )}
+          
+          <DialogFooter className="flex flex-row justify-between sm:justify-between">
+            <Button variant="outline" onClick={cancelUpload} disabled={isUploading}>
+              Cancel
+            </Button>
+            <Button onClick={uploadAvatar} disabled={isUploading}>
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : "Upload"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
