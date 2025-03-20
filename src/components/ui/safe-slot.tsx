@@ -9,7 +9,7 @@ import { Slot } from "@radix-ui/react-slot"
  */
 const SafeSlot = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof Slot>
+  React.ComponentPropsWithoutRef<typeof Slot> & { asChild?: boolean }
 >(({ children, ...props }, ref) => {
   // Only apply special handling when asChild is true
   if (props.asChild) {
