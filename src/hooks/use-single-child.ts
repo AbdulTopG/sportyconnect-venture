@@ -18,7 +18,7 @@ export function useSingleChild(children: React.ReactNode): React.ReactElement {
   }
   
   // If we have multiple children or a non-element, wrap it in a fragment
-  return <React.Fragment>{children}</React.Fragment>;
+  return React.createElement(React.Fragment, null, children);
 }
 
 /**
@@ -36,9 +36,9 @@ export function withSingleChild<P>(Component: React.ComponentType<P>): React.FC<
         // @ts-ignore - Check for asChild prop
         props.asChild === true) {
       // @ts-ignore - Return component with updated children
-      return <Component {...props} children={useSingleChild(children)} />;
+      return React.createElement(Component, { ...props, children: useSingleChild(children) });
     }
     
-    return <Component {...props} />;
+    return React.createElement(Component, props);
   };
 }

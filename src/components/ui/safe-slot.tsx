@@ -16,13 +16,13 @@ const SafeSlot = React.forwardRef<
     // Ensure we have a single child when using asChild
     const child = React.Children.toArray(children).length === 1
       ? React.Children.only(children as React.ReactElement)
-      : <span>{children}</span>
+      : React.createElement("span", null, children);
     
-    return <Slot {...props} ref={ref}>{child}</Slot>
+    return React.createElement(Slot, { ...props, ref }, child);
   }
   
   // When not using asChild, pass through as normal
-  return <Slot {...props} ref={ref}>{children}</Slot>
+  return React.createElement(Slot, { ...props, ref }, children);
 })
 SafeSlot.displayName = "SafeSlot"
 
