@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import ProfileLayout from '@/components/profile/ProfileLayout';
 import ProfileTabs from '@/components/profile/ProfileTabs';
 import { useProfileTabs } from '@/hooks/use-profile-tabs';

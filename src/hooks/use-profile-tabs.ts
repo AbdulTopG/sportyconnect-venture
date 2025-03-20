@@ -1,27 +1,13 @@
 
-import { useState, useEffect } from 'react';
-import { useProfileData } from '@/hooks/use-profile-data';
+import { useState } from 'react';
 
-export const useProfileTabs = () => {
-  // Set a default value to ensure it's never undefined
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const { profile, refreshProfileData, loading } = useProfileData();
+type ProfileTab = 'activity' | 'stats' | 'matches' | 'achievements' | 'edit';
 
-  const handleSaveProfile = () => {
-    refreshProfileData();
-    setActiveTab('dashboard');
-  };
-
-  // For debugging
-  useEffect(() => {
-    console.log("useProfileTabs activeTab:", activeTab);
-  }, [activeTab]);
-
+export function useProfileTabs() {
+  const [activeTab, setActiveTab] = useState<ProfileTab>('activity');
+  
   return {
     activeTab,
     setActiveTab,
-    profile,
-    loading,
-    handleSaveProfile
   };
-};
+}

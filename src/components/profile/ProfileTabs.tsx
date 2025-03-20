@@ -1,48 +1,55 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import PlayerDashboard from '@/components/match/PlayerDashboard';
-import ProfileEditForm from '@/components/match/ProfileEditForm';
-import { useProfileTabs } from '@/hooks/use-profile-tabs';
+import UserActivityFeed from './UserActivityFeed';
+import { PlayerStats } from '@/components/match/PlayerStats';
+import { UpcomingMatchesList } from '@/components/match/UpcomingMatchesList';
+import { PlayerAchievements } from '@/components/match/PlayerAchievements';
+import { ProfileEditForm } from '@/components/match/ProfileEditForm';
+import { useAuth } from '@/context/AuthContext';
+
+type ProfileTab = 'activity' | 'stats' | 'matches' | 'achievements' | 'edit';
 
 interface ProfileTabsProps {
-  activeTab: string;
-  setActiveTab: (value: string) => void;
+  activeTab: ProfileTab;
+  setActiveTab: (tab: ProfileTab) => void;
 }
 
 const ProfileTabs = ({ activeTab, setActiveTab }: ProfileTabsProps) => {
-  const { profile, loading, handleSaveProfile } = useProfileTabs();
+  const { user } = useAuth();
+  
+  if (!user) {
+    return null;
+  }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="w-full max-w-md mx-auto">
-        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ProfileTab)} className="w-full">
+      <TabsList className="grid grid-cols-5 w-full">
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+        <TabsTrigger value="stats">Stats</TabsTrigger>
+        <TabsTrigger value="matches">Matches</TabsTrigger>
+        <TabsTrigger value="achievements">Achievements</TabsTrigger>
         <TabsTrigger value="edit">Edit Profile</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="dashboard">
-        <PlayerDashboard />
+      <TabsContent value="activity" className="mt-6">
+        <UserActivityFeed userId={user.id} />
       </TabsContent>
       
-      <TabsContent value="edit">
-        <div className="max-w-2xl mx-auto">
-          <div className="sportyfi-card">
-            <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
-            
-            {loading.profile ? (
-              <div className="flex justify-center py-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sportyfi-orange"></div>
-              </div>
-            ) : profile ? (
-              <ProfileEditForm 
-                user={profile} 
-                onSave={handleSaveProfile} 
-              />
-            ) : (
-              <p className="text-center text-muted-foreground">Unable to load profile</p>
-            )}
-          </div>
-        </div>
+      <TabsContent value="stats" className="mt-6">
+        <PlayerStats userId={user.id} />
+      </TabsContent>
+      
+      <TabsContent value="matches" className="mt-6">
+        <UpcomingMatchesList userId={user.id} />
+      </TabsContent>
+      
+      <TabsContent value="achievements" className="mt-6">
+        <PlayerAchievements userId={user.id} />
+      </TabsContent>
+      
+      <TabsContent value="edit" className="mt-6">
+        <ProfileEditForm user={user} />
       </TabsContent>
     </Tabs>
   );

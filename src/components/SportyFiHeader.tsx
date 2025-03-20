@@ -80,8 +80,10 @@ const SportyFiHeader = () => {
                   asChild
                 >
                   <Link to="/profile">
-                    <User size={18} />
-                    <span>Profile</span>
+                    <span className="flex items-center gap-2">
+                      <User size={18} />
+                      <span>Profile</span>
+                    </span>
                   </Link>
                 </Button>
                 
@@ -90,8 +92,10 @@ const SportyFiHeader = () => {
                   className="flex items-center space-x-2"
                   onClick={handleSignOut}
                 >
-                  <LogOut size={18} />
-                  <span>Sign Out</span>
+                  <span className="flex items-center gap-2">
+                    <LogOut size={18} />
+                    <span>Sign Out</span>
+                  </span>
                 </Button>
               </>
             ) : (
@@ -102,8 +106,10 @@ const SportyFiHeader = () => {
                   asChild
                 >
                   <Link to="/auth">
-                    <User size={18} />
-                    <span>Login</span>
+                    <span className="flex items-center gap-2">
+                      <User size={18} />
+                      <span>Login</span>
+                    </span>
                   </Link>
                 </Button>
                 
@@ -112,7 +118,7 @@ const SportyFiHeader = () => {
                   asChild
                 >
                   <Link to="/auth?tab=signup">
-                    Sign Up
+                    <span>Sign Up</span>
                   </Link>
                 </Button>
               </>
@@ -166,8 +172,10 @@ const SportyFiHeader = () => {
                           asChild
                         >
                           <Link to="/profile" onClick={() => setIsOpen(false)}>
-                            <User size={18} />
-                            <span>Profile</span>
+                            <span className="flex items-center gap-2">
+                              <User size={18} />
+                              <span>Profile</span>
+                            </span>
                           </Link>
                         </Button>
                         <Button
@@ -175,8 +183,10 @@ const SportyFiHeader = () => {
                           className="w-full flex items-center justify-center space-x-2"
                           onClick={handleSignOut}
                         >
-                          <LogOut size={18} />
-                          <span>Sign Out</span>
+                          <span className="flex items-center gap-2">
+                            <LogOut size={18} />
+                            <span>Sign Out</span>
+                          </span>
                         </Button>
                       </>
                     ) : (
@@ -187,8 +197,10 @@ const SportyFiHeader = () => {
                           asChild
                         >
                           <Link to="/auth" onClick={() => setIsOpen(false)}>
-                            <LogIn size={18} />
-                            <span>Login</span>
+                            <span className="flex items-center gap-2">
+                              <LogIn size={18} />
+                              <span>Login</span>
+                            </span>
                           </Link>
                         </Button>
                         <Button 
@@ -196,7 +208,7 @@ const SportyFiHeader = () => {
                           asChild
                         >
                           <Link to="/auth?tab=signup" onClick={() => setIsOpen(false)}>
-                            Sign Up
+                            <span>Sign Up</span>
                           </Link>
                         </Button>
                       </>
