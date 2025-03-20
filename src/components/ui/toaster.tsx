@@ -8,6 +8,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { SafeSlot } from "@/components/ui/safe-slot"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -23,7 +24,9 @@ export function Toaster() {
                 <ToastDescription>{description}</ToastDescription>
               )}
             </div>
-            {action}
+            {action && (
+              <SafeSlot asChild>{action}</SafeSlot>
+            )}
             <ToastClose />
           </Toast>
         )

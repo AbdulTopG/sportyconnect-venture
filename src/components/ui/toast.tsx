@@ -45,6 +45,7 @@ export interface ToastProps extends React.ComponentPropsWithoutRef<typeof ToastP
 
 export interface ToastActionElement {
   altText?: string
+  children?: React.ReactNode
 }
 
 const Toast = React.forwardRef<
