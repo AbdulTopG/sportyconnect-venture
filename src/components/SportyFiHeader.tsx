@@ -74,12 +74,17 @@ const SportyFiHeader = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link to="/profile">
-                  <Button variant="outline" className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center space-x-2" 
+                  asChild
+                >
+                  <Link to="/profile">
                     <User size={18} />
                     <span>Profile</span>
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
+                
                 <Button 
                   variant="outline" 
                   className="flex items-center space-x-2"
@@ -91,17 +96,22 @@ const SportyFiHeader = () => {
               </>
             ) : (
               <>
-                <Link to="/auth">
-                  <Button variant="outline" className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center space-x-2" 
+                  asChild
+                >
+                  <Link to="/auth">
                     <LogIn size={18} />
                     <span>Login</span>
-                  </Button>
-                </Link>
-                <Link to="/auth?tab=signup">
-                  <Button className="bg-sportyfi-orange hover:bg-red-600 text-white">
+                  </Link>
+                </Button>
+                
+                <Button className="bg-sportyfi-orange hover:bg-red-600 text-white" asChild>
+                  <Link to="/auth?tab=signup">
                     Sign Up
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </>
             )}
           </div>
@@ -149,19 +159,19 @@ const SportyFiHeader = () => {
                   <div className="mt-auto border-t py-4 space-y-4">
                     {isAuthenticated ? (
                       <>
-                        <Link
-                          to="/profile"
-                          className="w-full"
-                          onClick={() => setIsOpen(false)}
+                        <Button
+                          variant="outline"
+                          className="w-full flex items-center justify-center space-x-2"
+                          asChild
                         >
-                          <Button
-                            variant="outline"
-                            className="w-full flex items-center justify-center space-x-2"
+                          <Link
+                            to="/profile"
+                            onClick={() => setIsOpen(false)}
                           >
                             <User size={18} />
                             <span>Profile</span>
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         <Button
                           variant="outline"
                           className="w-full flex items-center justify-center space-x-2"
@@ -173,28 +183,30 @@ const SportyFiHeader = () => {
                       </>
                     ) : (
                       <>
-                        <Link
-                          to="/auth"
-                          className="w-full"
-                          onClick={() => setIsOpen(false)}
+                        <Button
+                          variant="outline"
+                          className="w-full flex items-center justify-center space-x-2"
+                          asChild
                         >
-                          <Button
-                            variant="outline"
-                            className="w-full flex items-center justify-center space-x-2"
+                          <Link
+                            to="/auth"
+                            onClick={() => setIsOpen(false)}
                           >
                             <LogIn size={18} />
                             <span>Login</span>
-                          </Button>
-                        </Link>
-                        <Link
-                          to="/auth?tab=signup"
-                          className="w-full"
-                          onClick={() => setIsOpen(false)}
+                          </Link>
+                        </Button>
+                        <Button 
+                          className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
+                          asChild
                         >
-                          <Button className="w-full bg-sportyfi-orange hover:bg-red-600 text-white">
+                          <Link
+                            to="/auth?tab=signup"
+                            onClick={() => setIsOpen(false)}
+                          >
                             Sign Up
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       </>
                     )}
                   </div>
