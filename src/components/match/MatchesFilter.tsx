@@ -50,8 +50,12 @@ const MatchesFilter: React.FC<MatchesFilterProps> = ({
         </div>
         
         <Button
+          type="button"
           variant="outline" 
-          onClick={onToggleFilters}
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleFilters();
+          }}
           className="md:w-auto flex items-center gap-2"
         >
           <Filter className="h-4 w-4" />
@@ -100,8 +104,12 @@ const MatchesFilter: React.FC<MatchesFilterProps> = ({
           
           <div className="flex items-end">
             <Button 
+              type="button"
               variant="outline" 
-              onClick={onClearFilter} 
+              onClick={(e) => {
+                e.preventDefault();
+                onClearFilter();
+              }} 
               className="text-gray-600"
             >
               Reset Filters
