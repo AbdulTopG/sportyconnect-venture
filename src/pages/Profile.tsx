@@ -8,8 +8,7 @@ import ProfileHeader from '@/components/profile/ProfileHeader';
 import { useProfileData } from '@/hooks/use-profile-data';
 
 const Profile = () => {
-  const { activeTab, setActiveTab } = useProfileTabs();
-  const { profile, loading } = useProfileData();
+  const { activeTab, setActiveTab, profile, loading, handleSaveProfile } = useProfileTabs();
   const [error, setError] = useState<Error | null>(null);
 
   // Error boundary effect
@@ -44,7 +43,13 @@ const Profile = () => {
         <ProfileHeader user={profile} isEditable={true} />
       )}
       <div className="mt-6">
-        <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <ProfileTabs 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          profile={profile} 
+          loading={loading} 
+          handleSaveProfile={handleSaveProfile} 
+        />
       </div>
     </ProfileLayout>
   );
