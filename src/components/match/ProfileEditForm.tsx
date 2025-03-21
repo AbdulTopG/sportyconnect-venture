@@ -12,6 +12,8 @@ import { Image, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { calculateProfileCompleteness } from '@/lib/profile-utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProfileEditFormProps {
   user: {
@@ -28,12 +30,18 @@ interface ProfileEditFormProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/jpg'];
+const AVAILABLE_SPORTS = [
+  'Basketball', 'Football', 'Tennis', 'Cricket', 'Volleyball', 
+  'Badminton', 'Baseball', 'Swimming', 'Running', 'Table Tennis',
+  'Soccer', 'Golf', 'Hockey', 'Rugby', 'Boxing'
+];
 
 const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
   const [username, setUsername] = useState(user.username || '');
   const [bio, setBio] = useState(user.bio || '');
   const [location, setLocation] = useState(user.location || '');
   const [primarySport, setPrimarySport] = useState(user.primary_sport || '');
+  const [preferredSports, setPreferredSports] = useState<string[]>(user.preferred_sports || []);
   const [isSaving, setIsSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(user.avatar_url || '');
@@ -48,7 +56,7 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
     location,
     primary_sport: primarySport,
     avatar_url: avatarPreview,
-    preferred_sports: user.preferred_sports,
+    preferred_sports: preferredSports.length ? preferredSports : null,
   });
   
   // Show improvement if current > initial
@@ -68,6 +76,10 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
 
   const handlePrimarySportChange = (value: string) => {
     setPrimarySport(value);
+  };
+
+  const handlePreferredSportsChange = (value: string[]) => {
+    setPreferredSports(value);
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,6 +167,7 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
           bio,
           location,
           primary_sport: primarySport,
+          preferred_sports: preferredSports.length ? preferredSports : null,
           avatar_url: avatarPreview || user.avatar_url,
           updated_at: new Date().toISOString()
         })
@@ -268,18 +281,60 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
             <SelectValue placeholder="Select your primary sport" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Basketball">Basketball</SelectItem>
-            <SelectItem value="Football">Football</SelectItem>
-            <SelectItem value="Tennis">Tennis</SelectItem>
-            <SelectItem value="Cricket">Cricket</SelectItem>
-            <SelectItem value="Volleyball">Volleyball</SelectItem>
-            <SelectItem value="Badminton">Badminton</SelectItem>
-            <SelectItem value="Baseball">Baseball</SelectItem>
-            <SelectItem value="Swimming">Swimming</SelectItem>
-            <SelectItem value="Running">Running</SelectItem>
-            <SelectItem value="Table Tennis">Table Tennis</SelectItem>
+            {AVAILABLE_SPORTS.map((sport) => (
+              <SelectItem key={sport} value={sport}>{sport}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
+      </div>
+      
+      <div>
+        <Label className="block mb-2">Preferred Sports</Label>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-xs text-muted-foreground mb-2 flex items-center cursor-help">
+                <AlertCircle className="h-3 w-3 mr-1" /> 
+                Select all sports you're interested in
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click on multiple sports to select them</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <div className="overflow-y-auto max-h-40 bg-muted p-2 rounded-md">
+          <div className="flex flex-wrap gap-2">
+            {AVAILABLE_SPORTS.map((sport) => (
+              <div key={sport} className="inline-block">
+                <Button
+                  type="button"
+                  variant={preferredSports.includes(sport) ? "default" : "outline"}
+                  size="sm"
+                  className={preferredSports.includes(sport) 
+                    ? "bg-sportyfi-orange hover:bg-red-600 text-white"
+                    : "bg-white hover:bg-gray-100"
+                  }
+                  onClick={() => {
+                    if (preferredSports.includes(sport)) {
+                      setPreferredSports(preferredSports.filter(s => s !== sport));
+                    } else {
+                      setPreferredSports([...preferredSports, sport]);
+                    }
+                  }}
+                >
+                  {sport}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+        {preferredSports.length > 0 && (
+          <div className="mt-2 text-sm">
+            <span className="font-medium">Selected:</span> {preferredSports.join(', ')}
+          </div>
+        )}
       </div>
       
       <div>
