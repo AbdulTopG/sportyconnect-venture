@@ -77,18 +77,18 @@ const MatchesFilter: React.FC<MatchesFilterProps> = ({
           <div>
             <Label className="block mb-2 text-sm font-medium">Skill Level</Label>
             <Select 
-              value={skillLevel || ''} 
-              onValueChange={(value) => onSkillLevelChange(value || null)}
+              value={skillLevel || 'all'} 
+              onValueChange={(value) => onSkillLevelChange(value === 'all' ? null : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All skill levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All skill levels</SelectItem>
+                <SelectItem value="all">All skill levels</SelectItem>
                 <SelectItem value="beginner">Beginner</SelectItem>
                 <SelectItem value="intermediate">Intermediate</SelectItem>
                 <SelectItem value="advanced">Advanced</SelectItem>
-                <SelectItem value="all">All levels welcome</SelectItem>
+                <SelectItem value="all-levels">All levels welcome</SelectItem>
               </SelectContent>
             </Select>
           </div>

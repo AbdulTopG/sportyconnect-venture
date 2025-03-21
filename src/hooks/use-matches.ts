@@ -71,7 +71,12 @@ export const useMatches = (initialSport: string | null = null) => {
     
     // Apply skill level filter
     if (skillLevel) {
-      result = result.filter(match => match.skill_level === skillLevel);
+      result = result.filter(match => {
+        // Check if the skill_level property exists and matches the filter
+        // Convert 'all-levels' filter to 'all' value in the database if needed
+        const filterValue = skillLevel === 'all-levels' ? 'all' : skillLevel;
+        return match.skill_level === filterValue;
+      });
     }
     
     // Apply time filter
