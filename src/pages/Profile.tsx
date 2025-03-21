@@ -5,7 +5,6 @@ import ProfileTabs from '@/components/profile/ProfileTabs';
 import { useProfileTabs } from '@/hooks/use-profile-tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ProfileHeader from '@/components/profile/ProfileHeader';
-import { useProfileData } from '@/hooks/use-profile-data';
 
 const Profile = () => {
   const { activeTab, setActiveTab, profile, loading, handleSaveProfile } = useProfileTabs();

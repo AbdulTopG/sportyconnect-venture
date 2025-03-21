@@ -4,11 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MapPin, Camera, Loader2 } from 'lucide-react';
+import { MapPin, Camera, Loader2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useProfileData } from '@/hooks/use-profile-data';
+import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { calculateProfileCompleteness } from '@/lib/profile-utils';
 
 interface ProfileHeaderProps {
   user: {
@@ -18,6 +21,7 @@ interface ProfileHeaderProps {
     location?: string | null;
     primary_sport?: string | null;
     bio?: string | null;
+    preferred_sports?: string[] | null;
   };
   isEditable?: boolean;
 }
@@ -33,6 +37,10 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
   
   const canEdit = isEditable && authUser && authUser.id === user.id;
   
+  // Calculate profile completeness
+  const { completeness, missingFields } = calculateProfileCompleteness(user);
+  
+  // Handle file input changes
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -172,6 +180,34 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
       
       {user.primary_sport && (
         <Badge className="mb-4 bg-blue-500">{user.primary_sport}</Badge>
+      )}
+      
+      {/* Profile completeness indicator */}
+      {canEdit && (
+        <div className="w-full mt-2 mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm font-medium">Profile Completeness</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                    <Info className="h-4 w-4" />
+                    <span className="sr-only">Profile completion info</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">
+                    {missingFields.length > 0 
+                      ? `To complete your profile, add: ${missingFields.join(', ')}`
+                      : 'Your profile is complete!'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span className="text-sm font-medium">{completeness}%</span>
+          </div>
+          <Progress value={completeness} className="h-2" />
+        </div>
       )}
       
       {user.bio && (

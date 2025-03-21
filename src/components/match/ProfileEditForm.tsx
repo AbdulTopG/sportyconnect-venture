@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Image } from 'lucide-react';
+import { Image, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { calculateProfileCompleteness } from '@/lib/profile-utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ProfileEditFormProps {
   user: {
@@ -34,6 +37,22 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(user.avatar_url || '');
+
+  // Calculate initial profile completeness
+  const initialCompleteness = calculateProfileCompleteness(user);
+  
+  // Calculate current profile completeness based on form state
+  const currentCompleteness = calculateProfileCompleteness({
+    username,
+    bio,
+    location,
+    primary_sport: primarySport,
+    avatar_url: avatarPreview,
+    preferred_sports: user.preferred_sports,
+  });
+  
+  // Show improvement if current > initial
+  const showImprovement = currentCompleteness.completeness > initialCompleteness.completeness;
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
@@ -165,6 +184,36 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Profile completeness indicator */}
+      <div className="mb-6 p-4 bg-muted rounded-md">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium">Profile Completeness</h3>
+          <span className="text-sm font-medium">{currentCompleteness.completeness}%</span>
+        </div>
+        <Progress value={currentCompleteness.completeness} className="h-2.5 mb-2" />
+        
+        {showImprovement && (
+          <Alert variant="default" className="bg-green-50 text-green-800 border-green-200 mt-2">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertTitle>Looking good!</AlertTitle>
+            <AlertDescription>
+              Your profile will be {currentCompleteness.completeness - initialCompleteness.completeness}% more complete with these changes.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {currentCompleteness.missingFields.length > 0 && (
+          <div className="text-xs text-muted-foreground mt-2">
+            <span className="font-medium">To complete your profile, add:</span>
+            <ul className="list-disc ml-5 mt-1">
+              {currentCompleteness.missingFields.map((field) => (
+                <li key={field}>{field}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      
       <div className="flex flex-col items-center mb-6">
         <Avatar className="h-24 w-24 mb-3 border-2 border-sportyfi-orange">
           <AvatarImage src={avatarPreview} />
