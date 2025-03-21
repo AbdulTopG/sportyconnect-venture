@@ -3,16 +3,16 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayerDashboard from '@/components/match/PlayerDashboard';
 import ProfileEditForm from '@/components/match/ProfileEditForm';
-import { useProfileTabs } from '@/hooks/use-profile-tabs';
 
 interface ProfileTabsProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
+  profile?: any;
+  loading?: any;
+  handleSaveProfile?: () => void;
 }
 
-const ProfileTabs = ({ activeTab, setActiveTab }: ProfileTabsProps) => {
-  const { profile, loading, handleSaveProfile } = useProfileTabs();
-
+const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProfile }: ProfileTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="w-full max-w-md mx-auto">
@@ -29,7 +29,7 @@ const ProfileTabs = ({ activeTab, setActiveTab }: ProfileTabsProps) => {
           <div className="sportyfi-card">
             <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
             
-            {loading.profile ? (
+            {loading?.profile ? (
               <div className="flex justify-center py-10">
                 <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sportyfi-orange"></div>
               </div>
