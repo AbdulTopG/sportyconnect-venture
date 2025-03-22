@@ -34,7 +34,9 @@ const Matches = () => {
   const { matches, isLoading, error } = useMatches(selectedSport);
 
   // Extract unique sports from the matches for filtering
-  const allSports = Array.from(new Set(matches.map(match => match.sport)));
+  const allSports = matches && matches.length > 0 
+    ? Array.from(new Set(matches.map(match => match.sport))) 
+    : [];
 
   const clearFilter = () => {
     setSelectedSport(null);
@@ -70,6 +72,12 @@ const Matches = () => {
       : 'Available Matches';
   };
 
+  console.log("Matches component rendering with:", { 
+    isLoading, 
+    error, 
+    matchesCount: matches?.length || 0 
+  });
+
   return (
     <div className="min-h-screen flex flex-col">
       <SportyFiHeader />
@@ -98,7 +106,7 @@ const Matches = () => {
                 error={error} 
                 onRetry={() => window.location.reload()} 
               />
-            ) : matches.length === 0 ? (
+            ) : !matches || matches.length === 0 ? (
               <MatchesEmptyState 
                 selectedSport={selectedSport} 
                 onClearFilter={clearFilter} 

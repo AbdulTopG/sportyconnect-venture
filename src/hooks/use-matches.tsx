@@ -17,6 +17,7 @@ export function useMatches(selectedSport: string | null) {
       setError(null);
       
       try {
+        console.log('Fetching matches with filter:', selectedSport);
         let query = supabase.from('matches').select('*');
         
         // Apply sport filter if selected
@@ -27,11 +28,12 @@ export function useMatches(selectedSport: string | null) {
         // Sort by match time, most recent first
         query = query.order('match_time', { ascending: true });
         
-        const { data, error } = await query;
+        const { data, error: supabaseError } = await query;
         
-        if (error) {
-          console.error("Error fetching matches:", error);
+        if (supabaseError) {
+          console.error("Error fetching matches:", supabaseError);
           setError("Failed to load matches. Please try again.");
+          setMatches([]);
           return;
         }
         
@@ -40,6 +42,7 @@ export function useMatches(selectedSport: string | null) {
       } catch (err) {
         console.error("Unexpected error fetching matches:", err);
         setError("An unexpected error occurred. Please try again.");
+        setMatches([]);
       } finally {
         setIsLoading(false);
       }
@@ -82,8 +85,11 @@ export function useMatches(selectedSport: string | null) {
       )
       .subscribe();
     
+    console.log('Subscribed to realtime updates for matches');
+    
     // Cleanup function
     return () => {
+      console.log('Unsubscribing from realtime updates');
       supabase.removeChannel(matchesChannel);
     };
   }, [selectedSport, user?.id]);
