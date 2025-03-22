@@ -12,7 +12,6 @@ import Matches from "./pages/Matches";
 import Bookings from "./pages/Bookings";
 import Venues from "./pages/Venues";
 import RequestVenue from "./pages/RequestVenue";
-import Messages from "./pages/Messages";
 import { AuthProvider } from "./context/AuthContext";
 
 const router = createBrowserRouter([
@@ -44,10 +43,6 @@ const router = createBrowserRouter([
       {
         path: "/venue-request",
         element: <RequestVenue />,
-      },
-      {
-        path: "/messages",
-        element: <Messages />
       },
     ],
   },
