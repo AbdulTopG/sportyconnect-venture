@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,12 @@ interface MatchCardProps {
 
 const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
   const navigate = useNavigate();
+  const [currentMatch, setCurrentMatch] = useState<Match>(match);
+  
+  // Update local state when match prop changes
+  useEffect(() => {
+    setCurrentMatch(match);
+  }, [match]);
   
   const isLive = Math.random() > 0.7;
   
@@ -28,7 +34,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
     <div className="sportyfi-card hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-lg font-semibold">
-          {match.sport.charAt(0).toUpperCase() + match.sport.slice(1)}
+          {currentMatch.sport.charAt(0).toUpperCase() + currentMatch.sport.slice(1)}
         </h3>
         <div className="flex gap-2">
           {isLive && (
@@ -37,26 +43,26 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
               Live
             </Badge>
           )}
-          <Badge className={`${match.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
-            {match.available_slots > 0 ? `${match.available_slots} spots left` : 'Full'}
+          <Badge className={`${currentMatch.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
+            {currentMatch.available_slots > 0 ? `${currentMatch.available_slots} spots left` : 'Full'}
           </Badge>
         </div>
       </div>
       <div className="space-y-2 mb-4">
         <p className="text-gray-700 flex items-center">
           <MapPin className="h-4 w-4 mr-1 text-gray-500" />
-          {match.location}
+          {currentMatch.location}
         </p>
         <p className="text-gray-700 flex items-center">
           <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-          {new Date(match.match_time).toLocaleString(undefined, {
+          {new Date(currentMatch.match_time).toLocaleString(undefined, {
             dateStyle: 'medium',
             timeStyle: 'short'
           })}
         </p>
         <p className="text-gray-700 flex items-center">
           <Users className="h-4 w-4 mr-1 text-gray-500" />
-          {match.team_size} players ({match.skill_level})
+          {currentMatch.team_size} players ({currentMatch.skill_level})
         </p>
       </div>
       <div className="flex gap-2">
@@ -70,7 +76,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
           </Button>
         )}
         <Button 
-          onClick={() => navigate(`/matches/${match.id}`)}
+          onClick={() => navigate(`/matches/${currentMatch.id}`)}
           className="flex-1 bg-sportyfi-orange hover:bg-red-600 text-white"
         >
           View Details

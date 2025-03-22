@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -63,6 +62,7 @@ const MatchDetail = () => {
         return;
       }
       
+      console.log("Fetched match data:", matchData);
       setMatch(matchData);
       
       await fetchParticipants();
@@ -150,7 +150,7 @@ const MatchDetail = () => {
     fetchMatchDetails();
   }, [id]);
 
-  // Set up realtime subscription to participants table
+  // Set up realtime subscription to participants table with improved handling
   useEffect(() => {
     if (!id) return;
     
@@ -167,19 +167,29 @@ const MatchDetail = () => {
         },
         (payload) => {
           console.log('Participants change detected:', payload);
-          fetchParticipants();
           
-          // If match data might have changed (available_slots), refetch match as well
-          supabase
-            .from('matches')
-            .select('*')
-            .eq('id', id)
-            .single()
-            .then(({ data, error }) => {
-              if (!error && data) {
-                setMatch(data);
-              }
-            });
+          // Always refetch both participants and match data to ensure consistency
+          Promise.all([
+            fetchParticipants(),
+            supabase
+              .from('matches')
+              .select('*')
+              .eq('id', id)
+              .single()
+              .then(({ data, error }) => {
+                if (!error && data) {
+                  console.log("Updated match data from realtime:", data);
+                  setMatch(data);
+                  // If we were in a "join success" state but the available slots don't reflect that,
+                  // reset the join success state to match reality
+                  if (isJoinSuccess && user && !participants.some(p => p.user_id === user.id)) {
+                    setIsJoinSuccess(false);
+                  }
+                }
+              })
+          ]).catch(err => {
+            console.error("Error refreshing data after realtime update:", err);
+          });
         }
       )
       .subscribe();
@@ -187,7 +197,7 @@ const MatchDetail = () => {
     return () => {
       supabase.removeChannel(participantsChannel);
     };
-  }, [id]);
+  }, [id, participants, user, isJoinSuccess]);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
   const matchIsFull = match?.available_slots === 0;
@@ -241,7 +251,7 @@ const MatchDetail = () => {
         return;
       }
       
-      // Start a transaction using RPC
+      // Add participant
       const { data, error } = await supabase
         .from('participants')
         .insert([
@@ -275,13 +285,16 @@ const MatchDetail = () => {
         throw new Error("Could not update available slots");
       }
       
-      // Update local state
+      // Update local state - Important: use the complete set of data from the database
       setMatch({
         ...match,
         available_slots: newAvailableSlots
       });
       
-      // Add the new participant to our local state
+      // Only set join success if we're sure the database updates completed successfully
+      setIsJoinSuccess(true);
+      
+      // Add the new participant to our local state with necessary profile data
       if (data && data[0]) {
         const newParticipant = data[0] as Participant;
         const enhancedParticipant: ParticipantWithProfile = {
@@ -294,12 +307,14 @@ const MatchDetail = () => {
         setParticipants(prev => [...prev, enhancedParticipant]);
       }
       
-      setIsJoinSuccess(true);
-      
       toast({
         title: "Success!",
         description: "You've joined the match. See you there!",
       });
+      
+      // Force refetch to ensure UI is in sync with database
+      fetchMatchDetails();
+      
     } catch (error: any) {
       console.error("Error joining match:", error);
       toast({
@@ -307,6 +322,9 @@ const MatchDetail = () => {
         description: error.message || "There was an error joining the match. Please try again.",
         variant: "destructive",
       });
+      
+      // Reset join success state
+      setIsJoinSuccess(false);
       
       // Refresh the data to ensure UI is in sync with the database
       fetchMatchDetails();
