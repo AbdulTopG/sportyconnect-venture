@@ -3,32 +3,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { Message, Conversation } from '@/types/messages';
 
-export type Message = {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  created_at: string;
-  read: boolean;
-  sender_profile?: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  receiver_profile?: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-};
-
-export type Conversation = {
-  user_id: string;
-  username: string | null;
-  avatar_url: string | null;
-  last_message?: string;
-  last_message_time?: string;
-  unread_count: number;
-};
+export { type Message, type Conversation };
 
 export const useMessages = () => {
   const { user } = useAuth();
