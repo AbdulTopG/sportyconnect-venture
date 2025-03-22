@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -21,6 +21,7 @@ const CreateMatch = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
     sport: '',
@@ -115,12 +116,13 @@ const CreateMatch = () => {
       
       console.log("Match created successfully:", data);
       
-      setIsSubmitting(false);
+      // Set success state first
+      setCreateSuccess(true);
       
       // Show a more noticeable success message
       toast({
         title: "Match created successfully!",
-        description: "Your match has been added to the listings. Redirecting you to matches page.",
+        description: "Your match has been added to the listings.",
       });
       
       // Save current form data to use in navigation
@@ -137,8 +139,9 @@ const CreateMatch = () => {
         skillLevel: 'all',
       });
       
-      // Navigate to the matches page, showing the newly created match
+      // Delay navigation slightly to allow the user to see the success message
       setTimeout(() => {
+        setIsSubmitting(false);
         navigate(`/matches?sport=${sportFilter}`);
       }, 1500);
       
@@ -173,6 +176,17 @@ const CreateMatch = () => {
                   </Link>
                   {" to continue."}
                 </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {createSuccess && (
+            <Alert className="mb-6 bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Match Created!</AlertTitle>
+              <AlertDescription className="text-green-700">
+                Your match has been successfully created and is now visible to other users.
+                Redirecting you to the matches page...
               </AlertDescription>
             </Alert>
           )}
@@ -313,10 +327,22 @@ const CreateMatch = () => {
             <div className="pt-2">
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || createSuccess}
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
               >
-                {isSubmitting ? "Creating Match..." : "Create Match"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating Match...
+                  </>
+                ) : createSuccess ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Match Created
+                  </>
+                ) : (
+                  "Create Match"
+                )}
               </Button>
             </div>
           </form>
