@@ -3,6 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayerDashboard from '@/components/match/PlayerDashboard';
 import ProfileEditForm from '@/components/match/ProfileEditForm';
+import MatchesLoadingState from '@/components/match/MatchesLoadingState';
 
 interface ProfileTabsProps {
   activeTab: string;
@@ -30,9 +31,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProf
             <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
             
             {loading?.profile ? (
-              <div className="flex justify-center py-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sportyfi-orange"></div>
-              </div>
+              <MatchesLoadingState />
             ) : profile ? (
               <ProfileEditForm user={profile} onSave={handleSaveProfile} />
             ) : (

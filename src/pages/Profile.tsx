@@ -5,6 +5,7 @@ import ProfileTabs from '@/components/profile/ProfileTabs';
 import { useProfileTabs } from '@/hooks/use-profile-tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ProfileHeader from '@/components/profile/ProfileHeader';
+import MatchesLoadingState from '@/components/match/MatchesLoadingState';
 
 const Profile = () => {
   const { activeTab, setActiveTab, profile, loading, handleSaveProfile } = useProfileTabs();
@@ -32,6 +33,15 @@ const Profile = () => {
             An error occurred while loading your profile. Please try refreshing the page.
           </AlertDescription>
         </Alert>
+      </ProfileLayout>
+    );
+  }
+
+  // Show loading state while profile is loading
+  if (loading.profile && !profile) {
+    return (
+      <ProfileLayout>
+        <MatchesLoadingState message="Loading profile..." />
       </ProfileLayout>
     );
   }
