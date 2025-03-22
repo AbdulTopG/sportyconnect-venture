@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayerDashboard from '@/components/match/PlayerDashboard';
 import ProfileEditForm from '@/components/match/ProfileEditForm';
@@ -14,6 +14,15 @@ interface ProfileTabsProps {
 }
 
 const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProfile }: ProfileTabsProps) => {
+  // Add debugging information
+  useEffect(() => {
+    console.log('ProfileTabs rendering with:', { 
+      activeTab, 
+      profileLoaded: !!profile, 
+      loading 
+    });
+  }, [activeTab, profile, loading]);
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="w-full max-w-md mx-auto">
@@ -31,7 +40,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProf
             <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
             
             {loading?.profile ? (
-              <MatchesLoadingState />
+              <MatchesLoadingState message="Loading profile data..." />
             ) : profile ? (
               <ProfileEditForm user={profile} onSave={handleSaveProfile || (() => {})} />
             ) : (

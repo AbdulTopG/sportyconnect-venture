@@ -7,8 +7,10 @@ interface MatchesLoadingStateProps {
 }
 
 const MatchesLoadingState: React.FC<MatchesLoadingStateProps> = ({ 
-  message = "Loading..." 
+  message = "Loading matches..." 
 }) => {
+  console.log("Rendering MatchesLoadingState with message:", message);
+  
   return (
     <div className="flex justify-center py-12">
       <div className="text-center">

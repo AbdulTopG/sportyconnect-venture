@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
 import Footer from '@/components/Footer';
@@ -18,6 +18,11 @@ const MatchDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  // Add debugging for when the component mounts and for the id param
+  useEffect(() => {
+    console.log('MatchDetailPage mounted with ID:', id);
+  }, [id]);
+  
   const {
     match,
     participants,
@@ -34,12 +39,23 @@ const MatchDetailPage = () => {
 
   const { handleShare, isSharing } = useMatchShare(match);
 
+  // Add more debugging information
+  useEffect(() => {
+    console.log('Match detail data:', { 
+      matchLoaded: !!match, 
+      participantsCount: participants?.length || 0,
+      hostLoaded: !!host,
+      isLoading, 
+      error
+    });
+  }, [match, participants, host, isLoading, error]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <SportyFiHeader />
         <main className="flex-grow flex items-center justify-center">
-          <LoadingState />
+          <LoadingState message={`Loading match ${id}...`} />
         </main>
         <Footer />
       </div>
