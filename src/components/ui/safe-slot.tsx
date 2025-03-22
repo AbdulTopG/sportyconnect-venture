@@ -12,12 +12,22 @@ export const SafeSlot = React.forwardRef<
 >(({ asChild, children, ...props }, ref) => {
   // When asChild is true, clone the child and pass it the props
   if (asChild && React.isValidElement(children)) {
-    // Use type assertion to fix the TypeScript error
-    return React.cloneElement(children, {
-      ...props,
-      // TypeScript needs help understanding that the ref can be assigned
-      ref: ref as React.Ref<unknown>,
-    });
+    // Pass the ref and props to the child element
+    return React.cloneElement(
+      children,
+      {
+        ...props,
+        // For ref forwarding to work correctly with any component
+        ref: (children.type === React.Fragment)
+          ? undefined 
+          : ((val: unknown) => {
+              // Handle function refs
+              if (typeof ref === "function") ref(val);
+              // Handle object refs
+              else if (ref !== null) (ref as React.MutableRefObject<unknown>).current = val;
+            })
+      }
+    );
   }
 
   // Otherwise, render a div with the props
