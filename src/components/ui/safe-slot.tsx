@@ -18,15 +18,14 @@ const SafeSlot = React.forwardRef<HTMLDivElement, SafeSlotProps>(
       React.isValidElement(children) && 
       (children.type === React.Fragment || typeof children.type !== 'function');
 
-    if (asChild && !isFragment) {
+    if (asChild && !isFragment && React.isValidElement(children)) {
       return (
         <Slot {...props}>
-          {React.isValidElement(children) ? 
-            React.cloneElement(children, {
-              ...(children.props as object),
-              ref: ref as React.Ref<HTMLElement>
-            }) : 
-            children}
+          {React.cloneElement(children, {
+            ...children.props,
+            // Only add ref if it's a valid element that can accept refs
+            ...(typeof children.type !== 'string' ? { ref } : {})
+          })}
         </Slot>
       );
     }
