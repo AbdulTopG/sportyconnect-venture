@@ -12,9 +12,10 @@ import { useProfileData } from '@/hooks/use-profile-data';
 interface ProfileHeaderProps {
   user: Profile;
   isEditable?: boolean;
+  onEditClick?: () => void;
 }
 
-const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
+const ProfileHeader = ({ user, isEditable = false, onEditClick }: ProfileHeaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isUploading, handleAvatarChange } = useAvatarUpload();
   const { refreshProfileData } = useProfileData();
@@ -119,7 +120,7 @@ const ProfileHeader = ({ user, isEditable = false }: ProfileHeaderProps) => {
               <Button 
                 variant="outline" 
                 className="w-full md:w-auto"
-                onClick={() => document.getElementById('profile-edit-modal')?.click()}
+                onClick={onEditClick}
                 size="sm"
               >
                 Edit Profile

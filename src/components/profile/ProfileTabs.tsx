@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayerDashboard from '@/components/match/PlayerDashboard';
 import ProfileEditForm from '@/components/match/ProfileEditForm';
 import MatchesLoadingState from '@/components/match/MatchesLoadingState';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface ProfileTabsProps {
   activeTab: string;
@@ -33,7 +34,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProf
             {loading?.profile ? (
               <MatchesLoadingState />
             ) : profile ? (
-              <ProfileEditForm user={profile} onSave={handleSaveProfile} />
+              <ProfileEditForm user={profile} onSave={handleSaveProfile || (() => {})} />
             ) : (
               <p className="text-center text-muted-foreground">Unable to load profile</p>
             )}
