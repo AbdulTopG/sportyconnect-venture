@@ -1,13 +1,25 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
+type ProfileData = {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+  location: string | null;
+  primary_sport: string | null;
+  bio: string | null;
+  preferred_sports: string[] | null;
+};
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  profile: ProfileData | null;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -23,7 +35,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const navigate = useNavigate();
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+
+      return data as ProfileData;
+    } catch (err) {
+      console.error("Unexpected error fetching profile:", err);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const getSession = async () => {
@@ -44,6 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Session data retrieved:", data.session ? "Session exists" : "No session");
         setSession(data.session);
         setUser(data.session?.user || null);
+        
+        if (data.session?.user?.id) {
+          const profileData = await fetchProfile(data.session.user.id);
+          setProfile(profileData);
+        }
       } catch (err) {
         console.error("Unexpected error in getSession:", err);
       } finally {
@@ -54,10 +92,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user || null);
+        
+        if (currentSession?.user?.id) {
+          const profileData = await fetchProfile(currentSession.user.id);
+          setProfile(profileData);
+        } else {
+          setProfile(null);
+        }
       }
     );
 
@@ -313,6 +358,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         session,
         isLoading,
+        profile,
         signUp,
         signIn,
         signInWithGoogle,
