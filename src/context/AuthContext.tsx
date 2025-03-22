@@ -2,14 +2,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 
 // Define the shape of our auth context
 export interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: any | null; // Using any for profile data
-  signIn: () => Promise<void>;
+  signIn: (email?: string, password?: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<void>;
+  verifyOtp: (phone: string, otp: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -19,7 +25,12 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   signIn: async () => {},
+  signUp: async () => {},
   signOut: async () => {},
+  signInWithGoogle: async () => {},
+  signInWithApple: async () => {},
+  signInWithPhone: async () => {},
+  verifyOtp: async () => {},
   isLoading: true,
 });
 
@@ -75,7 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching profile:', error);
@@ -91,13 +102,121 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signIn = async () => {
-    await supabase.auth.signInWithOAuth({
+  const signIn = async (email?: string, password?: string) => {
+    if (!email || !password) {
+      // Handle social login case
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      return;
+    }
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) throw error;
+  };
+
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    
+    if (error) throw error;
+    
+    toast({
+      title: "Sign Up Successful",
+      description: "Please check your email for verification.",
+    });
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+    
+    if (error) {
+      console.error("Error signing in with Google:", error);
+      toast({
+        title: "Sign In Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const signInWithApple = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    
+    if (error) {
+      console.error("Error signing in with Apple:", error);
+      toast({
+        title: "Sign In Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const signInWithPhone = async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: {
+        shouldCreateUser: true,
+      }
+    });
+    
+    if (error) {
+      console.error("Error sending OTP:", error);
+      toast({
+        title: "Phone Authentication Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
+    
+    toast({
+      title: "Verification Code Sent",
+      description: "Please check your phone for the verification code.",
+    });
+  };
+
+  const verifyOtp = async (phone: string, otp: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      phone,
+      token: otp,
+      type: 'sms'
+    });
+    
+    if (error) {
+      console.error("Error verifying OTP:", error);
+      toast({
+        title: "Verification Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const signOut = async () => {
@@ -110,7 +229,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     profile,
     signIn,
+    signUp,
     signOut,
+    signInWithGoogle,
+    signInWithApple,
+    signInWithPhone,
+    verifyOtp,
     isLoading,
   };
 

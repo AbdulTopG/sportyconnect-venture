@@ -2,7 +2,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 
-interface SafeSlotProps extends React.ComponentPropsWithoutRef<typeof Slot> {
+interface SafeSlotProps extends React.ComponentPropsWithoutRef<"div"> {
   asChild?: boolean;
 }
 
@@ -14,7 +14,7 @@ interface SafeSlotProps extends React.ComponentPropsWithoutRef<typeof Slot> {
 const SafeSlot = React.forwardRef<
   HTMLDivElement,
   SafeSlotProps
->(({ children, asChild, ...props }, ref) => {
+>(({ children, asChild = false, ...props }, ref) => {
   // Only apply special handling when asChild is true
   if (asChild) {
     // Ensure we have a single child when using asChild
@@ -26,7 +26,7 @@ const SafeSlot = React.forwardRef<
   }
   
   // When not using asChild, pass through as normal
-  return <Slot {...props} ref={ref}>{children}</Slot>
+  return <div {...props} ref={ref}>{children}</div>
 })
 SafeSlot.displayName = "SafeSlot"
 
