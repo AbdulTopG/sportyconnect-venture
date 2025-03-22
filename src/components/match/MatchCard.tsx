@@ -17,8 +17,14 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
   
   // Update local state when match prop changes
   useEffect(() => {
-    setCurrentMatch(match);
+    if (match) {
+      setCurrentMatch(match);
+    }
   }, [match]);
+  
+  if (!currentMatch) {
+    return null; // Don't render if no match data
+  }
   
   const isLive = Math.random() > 0.7;
   
@@ -30,11 +36,21 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
     }
   };
 
+  // Safely extract match properties with fallbacks
+  const { 
+    sport = "unknown", 
+    location = "unknown location", 
+    match_time = new Date().toISOString(),
+    team_size = 0,
+    skill_level = "all",
+    available_slots = 0
+  } = currentMatch;
+
   return (
     <div className="sportyfi-card hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-lg font-semibold">
-          {currentMatch.sport.charAt(0).toUpperCase() + currentMatch.sport.slice(1)}
+          {sport.charAt(0).toUpperCase() + sport.slice(1)}
         </h3>
         <div className="flex gap-2">
           {isLive && (
@@ -43,26 +59,26 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
               Live
             </Badge>
           )}
-          <Badge className={`${currentMatch.available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
-            {currentMatch.available_slots > 0 ? `${currentMatch.available_slots} spots left` : 'Full'}
+          <Badge className={`${available_slots > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-medium px-2.5 py-0.5 rounded`}>
+            {available_slots > 0 ? `${available_slots} spots left` : 'Full'}
           </Badge>
         </div>
       </div>
       <div className="space-y-2 mb-4">
         <p className="text-gray-700 flex items-center">
           <MapPin className="h-4 w-4 mr-1 text-gray-500" />
-          {currentMatch.location}
+          {location}
         </p>
         <p className="text-gray-700 flex items-center">
           <Calendar className="h-4 w-4 mr-1 text-gray-500" />
-          {new Date(currentMatch.match_time).toLocaleString(undefined, {
+          {new Date(match_time).toLocaleString(undefined, {
             dateStyle: 'medium',
             timeStyle: 'short'
           })}
         </p>
         <p className="text-gray-700 flex items-center">
           <Users className="h-4 w-4 mr-1 text-gray-500" />
-          {currentMatch.team_size} players ({currentMatch.skill_level})
+          {team_size} players ({skill_level})
         </p>
       </div>
       <div className="flex gap-2">

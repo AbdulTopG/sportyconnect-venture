@@ -75,7 +75,8 @@ const Matches = () => {
   console.log("Matches component rendering with:", { 
     isLoading, 
     error, 
-    matchesCount: matches?.length || 0 
+    matchesCount: matches?.length || 0,
+    matches
   });
 
   return (

@@ -6,7 +6,7 @@ const MatchesLoadingState: React.FC = () => {
   return (
     <div className="flex justify-center py-12">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-sportyfi-orange" />
         <p className="text-gray-500">Loading matches...</p>
       </div>
     </div>
