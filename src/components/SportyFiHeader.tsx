@@ -32,6 +32,7 @@ const SportyFiHeader = () => {
         description: "You've been logged out of your account.",
       });
       setIsOpen(false);
+      navigate('/'); // Now we handle navigation here after signOut
     } catch (error) {
       console.error("Sign out error:", error);
       toast({

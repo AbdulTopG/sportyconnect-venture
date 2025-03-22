@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
 type AuthContextType = {
@@ -23,7 +22,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const getSession = async () => {
@@ -100,7 +98,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           title: "Account created successfully",
           description: "You have been signed in automatically.",
         });
-        navigate('/');
       }
     } catch (error) {
       console.error("Sign up error:", error);
@@ -135,8 +132,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      
-      navigate('/');
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -263,8 +258,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Phone verified successfully",
         description: "You've been signed in.",
       });
-      
-      navigate('/');
     } catch (error) {
       console.error("OTP verification error:", error);
       throw error;
@@ -299,7 +292,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "You've been successfully signed out.",
       });
       
-      navigate('/');
+      // Remove the direct navigate call
+      // Instead we'll handle navigation in the components that call signOut
     } catch (error) {
       console.error("Sign out error:", error);
     } finally {

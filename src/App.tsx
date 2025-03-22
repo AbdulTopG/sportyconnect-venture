@@ -13,6 +13,7 @@ import Bookings from "./pages/Bookings";
 import Venues from "./pages/Venues";
 import RequestVenue from "./pages/RequestVenue";
 import Messages from "./pages/Messages";
+import { AuthProvider } from "./context/AuthContext";
 
 const router = createBrowserRouter([
   {
@@ -55,7 +56,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </React.StrictMode>
   );
 }
