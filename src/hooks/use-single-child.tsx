@@ -29,13 +29,13 @@ export function useSingleChild(children: React.ReactNode): React.ReactElement {
  */
 export function withSingleChild<P>(Component: React.ComponentType<P>): React.FC<P> {
   return (props: P) => {
-    // @ts-ignore - We need to access children even if not in the props type
-    const children = props.children;
+    // We need to access children even if not in the props type
+    const children = (props as any).children;
     
     if (children && 
-        // @ts-ignore - Check for asChild prop
-        props.asChild === true) {
-      // @ts-ignore - Return component with updated children
+        // Check for asChild prop
+        (props as any).asChild === true) {
+      // Return component with updated children
       return <Component {...props} children={useSingleChild(children)} />;
     }
     
