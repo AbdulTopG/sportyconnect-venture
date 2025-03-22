@@ -34,7 +34,7 @@ const MatchActions = ({
           onClick={handleLeaveMatch}
           disabled={isJoining}
           variant="destructive"
-          className="w-full"
+          className="w-full hover:bg-red-500"
         >
           {isJoining ? (
             <>
@@ -49,7 +49,7 @@ const MatchActions = ({
         <Button 
           onClick={handleJoinMatch}
           disabled={isJoining || matchIsFull || isHost}
-          className={`w-full ${!matchIsFull && !isHost ? "bg-sportyfi-orange hover:bg-red-600 text-white" : ""}`}
+          className={`w-full ${!matchIsFull && !isHost ? "bg-gradient-to-r from-sportyfi-orange to-red-500 hover:from-red-600 hover:to-red-700 text-white" : ""}`}
         >
           {isJoining ? (
             <>
@@ -69,7 +69,7 @@ const MatchActions = ({
       <Button 
         onClick={handleShare}
         variant="outline"
-        className="w-full"
+        className="w-full border-sportyfi-orange text-sportyfi-orange hover:bg-sportyfi-orange/10 hover:text-sportyfi-orange"
         disabled={isSharing}
       >
         {isSharing ? (
