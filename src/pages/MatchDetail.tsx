@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -97,6 +98,8 @@ const MatchDetail = () => {
 
   // Dedicated function to fetch participants
   const fetchParticipants = async () => {
+    if (!id) return;
+    
     try {
       const { data: participantsData, error: participantsError } = await supabase
         .from('participants')
@@ -137,6 +140,20 @@ const MatchDetail = () => {
         }
         
         setParticipants(enhancedParticipants);
+        
+        // Update local match state to reflect correct number of participants
+        if (match) {
+          // Calculate available_slots based on team_size minus number of participants
+          const calculatedAvailableSlots = Math.max(0, match.team_size - participantsData.length);
+          
+          // Only update if it's different to avoid unnecessary rerenders
+          if (match.available_slots !== calculatedAvailableSlots) {
+            setMatch({
+              ...match,
+              available_slots: calculatedAvailableSlots
+            });
+          }
+        }
       } else {
         setParticipants([]);
       }
@@ -165,31 +182,36 @@ const MatchDetail = () => {
           table: 'participants',
           filter: `match_id=eq.${id}`
         },
-        (payload) => {
+        async (payload) => {
           console.log('Participants change detected:', payload);
           
           // Always refetch both participants and match data to ensure consistency
-          Promise.all([
-            fetchParticipants(),
-            supabase
+          try {
+            // Fetch updated participants
+            await fetchParticipants();
+            
+            // Fetch updated match data
+            const { data: updatedMatchData, error: matchUpdateError } = await supabase
               .from('matches')
               .select('*')
               .eq('id', id)
-              .single()
-              .then(({ data, error }) => {
-                if (!error && data) {
-                  console.log("Updated match data from realtime:", data);
-                  setMatch(data);
-                  // If we were in a "join success" state but the available slots don't reflect that,
-                  // reset the join success state to match reality
-                  if (isJoinSuccess && user && !participants.some(p => p.user_id === user.id)) {
-                    setIsJoinSuccess(false);
-                  }
-                }
-              })
-          ]).catch(err => {
+              .single();
+              
+            if (!matchUpdateError && updatedMatchData) {
+              console.log("Updated match data from realtime:", updatedMatchData);
+              
+              // Update the match state with the latest data from DB
+              setMatch(updatedMatchData);
+              
+              // Sync join success state with actual participation status
+              if (user) {
+                const isUserParticipating = participants.some(p => p.user_id === user.id);
+                setIsJoinSuccess(isUserParticipating);
+              }
+            }
+          } catch (err) {
             console.error("Error refreshing data after realtime update:", err);
-          });
+          }
         }
       )
       .subscribe();
@@ -197,10 +219,20 @@ const MatchDetail = () => {
     return () => {
       supabase.removeChannel(participantsChannel);
     };
-  }, [id, participants, user, isJoinSuccess]);
+  }, [id, user]);
+
+  // This effect synchronizes isJoinSuccess with participants list
+  useEffect(() => {
+    if (user && participants.length > 0) {
+      const userIsCurrentlyParticipant = participants.some(p => p.user_id === user.id);
+      if (isJoinSuccess !== userIsCurrentlyParticipant) {
+        setIsJoinSuccess(userIsCurrentlyParticipant);
+      }
+    }
+  }, [participants, user, isJoinSuccess]);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
-  const matchIsFull = match?.available_slots === 0;
+  const matchIsFull = match ? match.available_slots <= 0 : false;
   const isHost = user && match && user.id === match.host_id;
 
   const handleJoinMatch = async () => {
@@ -217,7 +249,6 @@ const MatchDetail = () => {
     if (!match) return;
     
     setIsJoining(true);
-    setIsJoinSuccess(false);
     
     try {
       // First check if the user is already a participant
@@ -285,13 +316,12 @@ const MatchDetail = () => {
         throw new Error("Could not update available slots");
       }
       
-      // Update local state - Important: use the complete set of data from the database
+      // Update local state with the latest data
       setMatch({
         ...match,
         available_slots: newAvailableSlots
       });
       
-      // Only set join success if we're sure the database updates completed successfully
       setIsJoinSuccess(true);
       
       // Add the new participant to our local state with necessary profile data
@@ -312,8 +342,11 @@ const MatchDetail = () => {
         description: "You've joined the match. See you there!",
       });
       
-      // Force refetch to ensure UI is in sync with database
-      fetchMatchDetails();
+      // Force a complete data refresh to ensure everything is in sync
+      await Promise.all([
+        fetchMatchDetails(),
+        fetchParticipants()
+      ]);
       
     } catch (error: any) {
       console.error("Error joining match:", error);
@@ -327,7 +360,7 @@ const MatchDetail = () => {
       setIsJoinSuccess(false);
       
       // Refresh the data to ensure UI is in sync with the database
-      fetchMatchDetails();
+      await fetchMatchDetails();
     } finally {
       setIsJoining(false);
     }
@@ -392,11 +425,19 @@ const MatchDetail = () => {
       });
       
       setParticipants(prev => prev.filter(p => p.user_id !== user.id));
+      setIsJoinSuccess(false);
       
       toast({
         title: "You've left the match",
         description: "You are no longer participating in this match.",
       });
+      
+      // Force a complete data refresh to ensure everything is in sync
+      await Promise.all([
+        fetchMatchDetails(),
+        fetchParticipants()
+      ]);
+      
     } catch (error: any) {
       console.error("Error leaving match:", error);
       toast({
@@ -406,7 +447,7 @@ const MatchDetail = () => {
       });
       
       // Refresh data to ensure UI is in sync with the database
-      fetchMatchDetails();
+      await fetchMatchDetails();
     } finally {
       setIsJoining(false);
     }
