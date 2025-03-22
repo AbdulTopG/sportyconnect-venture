@@ -1,16 +1,26 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase, Match } from '@/integrations/supabase/client';
 
 /**
- * Hook to fetch matches data from Supabase
+ * Hook to fetch matches data from Supabase with optimized performance
  */
 const useFetchMatches = (selectedSport: string | null) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchMatches = useCallback(async () => {
+    // Cancel any in-flight requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create a new abort controller for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
     let isMounted = true;
     setIsLoading(true);
     setError(null);
@@ -29,7 +39,8 @@ const useFetchMatches = (selectedSport: string | null) => {
       
       const { data, error: supabaseError } = await query;
       
-      if (!isMounted) return;
+      // If component unmounted or a new request started, don't update state
+      if (!isMounted || abortController.signal.aborted) return;
       
       if (supabaseError) {
         console.error("Error fetching matches:", supabaseError);
@@ -46,17 +57,32 @@ const useFetchMatches = (selectedSport: string | null) => {
         setMatches(data);
       }
     } catch (err) {
-      if (!isMounted) return;
+      // If component unmounted or a new request started, don't update state
+      if (!isMounted || abortController.signal.aborted) return;
       
       console.error("Unexpected error fetching matches:", err);
       setError("An unexpected error occurred. Please try again.");
       setMatches([]);
     } finally {
-      if (isMounted) {
+      if (isMounted && !abortController.signal.aborted) {
         setIsLoading(false);
       }
     }
+    
+    return () => {
+      isMounted = false;
+      abortControllerRef.current = null;
+    };
   }, [selectedSport]);
+
+  // Cleanup on unmount
+  useCallback(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return {
     matches,
