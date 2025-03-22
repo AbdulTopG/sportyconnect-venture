@@ -2,6 +2,10 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 
+type SafeSlotProps = React.ComponentPropsWithoutRef<typeof Slot> & {
+  asChild?: boolean;
+}
+
 /**
  * SafeSlot is a wrapper around Radix UI's Slot component that ensures
  * it always receives a single child when asChild is true, preventing
@@ -9,7 +13,7 @@ import { Slot } from "@radix-ui/react-slot"
  */
 const SafeSlot = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof Slot>
+  SafeSlotProps
 >(({ children, ...props }, ref) => {
   // Only apply special handling when asChild is true
   if (props.asChild) {
