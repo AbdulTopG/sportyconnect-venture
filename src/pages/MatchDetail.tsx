@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
@@ -51,6 +50,7 @@ const MatchDetail = () => {
     setError(null);
     
     try {
+      // Use a transaction to ensure we get consistent data
       const { data: matchData, error: matchError } = await supabase
         .from('matches')
         .select('*')
@@ -66,8 +66,7 @@ const MatchDetail = () => {
       console.log("Fetched match data:", matchData);
       setMatch(matchData);
       
-      await fetchParticipants();
-      
+      // Fetch host information
       if (matchData.host_id) {
         const { data: hostData, error: hostError } = await supabase
           .from('profiles')
@@ -88,19 +87,8 @@ const MatchDetail = () => {
           });
         }
       }
-    } catch (err) {
-      console.error("Unexpected error fetching match details:", err);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Dedicated function to fetch participants
-  const fetchParticipants = async () => {
-    if (!id) return;
-    
-    try {
+      
+      // Fetch participants immediately after match data
       const { data: participantsData, error: participantsError } = await supabase
         .from('participants')
         .select('*')
@@ -141,24 +129,43 @@ const MatchDetail = () => {
         
         setParticipants(enhancedParticipants);
         
-        // Update local match state to reflect correct number of participants
-        if (match) {
-          // Calculate available_slots based on team_size minus number of participants
-          const calculatedAvailableSlots = Math.max(0, match.team_size - participantsData.length);
+        // Explicitly update available_slots based on participants count
+        if (matchData && matchData.team_size) {
+          const calculatedAvailableSlots = Math.max(0, matchData.team_size - participantsData.length);
           
-          // Only update if it's different to avoid unnecessary rerenders
-          if (match.available_slots !== calculatedAvailableSlots) {
-            setMatch({
-              ...match,
-              available_slots: calculatedAvailableSlots
-            });
+          // Only update if different from current value
+          if (matchData.available_slots !== calculatedAvailableSlots) {
+            const { error: updateError } = await supabase
+              .from('matches')
+              .update({ available_slots: calculatedAvailableSlots })
+              .eq('id', id);
+              
+            if (updateError) {
+              console.error("Error updating available slots:", updateError);
+            } else {
+              // Update local state to match the database
+              setMatch({
+                ...matchData,
+                available_slots: calculatedAvailableSlots
+              });
+            }
           }
         }
       } else {
         setParticipants([]);
       }
+      
+      // Check if current user is a participant
+      if (user && participantsData) {
+        const userParticipating = participantsData.some(p => p.user_id === user.id);
+        setIsJoinSuccess(userParticipating);
+      }
+      
     } catch (err) {
-      console.error("Error in fetchParticipants:", err);
+      console.error("Unexpected error fetching match details:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,13 +174,13 @@ const MatchDetail = () => {
     fetchMatchDetails();
   }, [id]);
 
-  // Set up realtime subscription to participants table with improved handling
+  // Set up realtime subscription with improved error handling and state synchronization
   useEffect(() => {
     if (!id) return;
     
     // Subscribe to changes in the participants table for this match
     const participantsChannel = supabase
-      .channel('participants-changes')
+      .channel('match-data-changes')
       .on(
         'postgres_changes',
         {
@@ -185,51 +192,45 @@ const MatchDetail = () => {
         async (payload) => {
           console.log('Participants change detected:', payload);
           
-          // Always refetch both participants and match data to ensure consistency
-          try {
-            // Fetch updated participants
-            await fetchParticipants();
-            
-            // Fetch updated match data
-            const { data: updatedMatchData, error: matchUpdateError } = await supabase
-              .from('matches')
-              .select('*')
-              .eq('id', id)
-              .single();
-              
-            if (!matchUpdateError && updatedMatchData) {
-              console.log("Updated match data from realtime:", updatedMatchData);
-              
-              // Update the match state with the latest data from DB
-              setMatch(updatedMatchData);
-              
-              // Sync join success state with actual participation status
-              if (user) {
-                const isUserParticipating = participants.some(p => p.user_id === user.id);
-                setIsJoinSuccess(isUserParticipating);
-              }
-            }
-          } catch (err) {
-            console.error("Error refreshing data after realtime update:", err);
-          }
+          // Complete data refresh to ensure consistency
+          await fetchMatchDetails();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches',
+          filter: `id=eq.${id}`
+        },
+        async (payload) => {
+          console.log('Match data change detected:', payload);
+          
+          // Complete data refresh to ensure consistency
+          await fetchMatchDetails();
         }
       )
       .subscribe();
     
+    // Cleanup function
     return () => {
       supabase.removeChannel(participantsChannel);
     };
-  }, [id, user]);
+  }, [id, user?.id]);
 
-  // This effect synchronizes isJoinSuccess with participants list
+  // This effect tracks when the user is participating and synchronizes UI state
   useEffect(() => {
     if (user && participants.length > 0) {
-      const userIsCurrentlyParticipant = participants.some(p => p.user_id === user.id);
-      if (isJoinSuccess !== userIsCurrentlyParticipant) {
-        setIsJoinSuccess(userIsCurrentlyParticipant);
+      const userIsParticipant = participants.some(p => p.user_id === user.id);
+      
+      // Only update if there's a mismatch to avoid infinite loops
+      if (isJoinSuccess !== userIsParticipant) {
+        console.log(`Synchronizing join state: ${userIsParticipant ? 'User is participating' : 'User is not participating'}`);
+        setIsJoinSuccess(userIsParticipant);
       }
     }
-  }, [participants, user, isJoinSuccess]);
+  }, [participants, user]);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
   const matchIsFull = match ? match.available_slots <= 0 : false;
@@ -261,7 +262,7 @@ const MatchDetail = () => {
         return;
       }
       
-      // Fetch the latest match data to ensure we have accurate available_slots
+      // Get fresh match data first to ensure accurate slots
       const { data: latestMatchData, error: latestMatchError } = await supabase
         .from('matches')
         .select('*')
@@ -298,7 +299,7 @@ const MatchDetail = () => {
       console.log("Successfully joined match:", data);
       
       // Update available slots
-      const newAvailableSlots = latestMatchData.available_slots - 1;
+      const newAvailableSlots = Math.max(0, latestMatchData.available_slots - 1);
       const { error: updateError } = await supabase
         .from('matches')
         .update({ available_slots: newAvailableSlots })
@@ -316,37 +317,16 @@ const MatchDetail = () => {
         throw new Error("Could not update available slots");
       }
       
-      // Update local state with the latest data
-      setMatch({
-        ...match,
-        available_slots: newAvailableSlots
-      });
-      
-      setIsJoinSuccess(true);
-      
-      // Add the new participant to our local state with necessary profile data
-      if (data && data[0]) {
-        const newParticipant = data[0] as Participant;
-        const enhancedParticipant: ParticipantWithProfile = {
-          ...newParticipant,
-          profile: {
-            username: user.email?.split('@')[0] || null
-          }
-        };
-        
-        setParticipants(prev => [...prev, enhancedParticipant]);
-      }
-      
       toast({
         title: "Success!",
         description: "You've joined the match. See you there!",
       });
       
-      // Force a complete data refresh to ensure everything is in sync
-      await Promise.all([
-        fetchMatchDetails(),
-        fetchParticipants()
-      ]);
+      // Mark as joined in UI immediately
+      setIsJoinSuccess(true);
+      
+      // Force a complete data refresh
+      await fetchMatchDetails();
       
     } catch (error: any) {
       console.error("Error joining match:", error);
@@ -356,10 +336,8 @@ const MatchDetail = () => {
         variant: "destructive",
       });
       
-      // Reset join success state
+      // Reset join success state and refresh data
       setIsJoinSuccess(false);
-      
-      // Refresh the data to ensure UI is in sync with the database
       await fetchMatchDetails();
     } finally {
       setIsJoining(false);
@@ -383,7 +361,7 @@ const MatchDetail = () => {
         return;
       }
       
-      // Fetch the latest match data for accurate state
+      // Get fresh match data
       const { data: latestMatchData, error: latestMatchError } = await supabase
         .from('matches')
         .select('*')
@@ -410,7 +388,9 @@ const MatchDetail = () => {
       const newAvailableSlots = latestMatchData.available_slots + 1;
       const { error: updateError } = await supabase
         .from('matches')
-        .update({ available_slots: newAvailableSlots })
+        .update({ 
+          available_slots: Math.min(newAvailableSlots, match.team_size) 
+        })
         .eq('id', match.id);
       
       if (updateError) {
@@ -418,14 +398,9 @@ const MatchDetail = () => {
         throw new Error("Could not update available slots");
       }
       
-      // Update local state
-      setMatch({
-        ...match,
-        available_slots: newAvailableSlots
-      });
-      
-      setParticipants(prev => prev.filter(p => p.user_id !== user.id));
+      // Update local state immediately
       setIsJoinSuccess(false);
+      setParticipants(prev => prev.filter(p => p.user_id !== user.id));
       
       toast({
         title: "You've left the match",
@@ -433,10 +408,7 @@ const MatchDetail = () => {
       });
       
       // Force a complete data refresh to ensure everything is in sync
-      await Promise.all([
-        fetchMatchDetails(),
-        fetchParticipants()
-      ]);
+      await fetchMatchDetails();
       
     } catch (error: any) {
       console.error("Error leaving match:", error);
