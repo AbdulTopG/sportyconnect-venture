@@ -1,3 +1,4 @@
+
 import React, { type ComponentPropsWithoutRef } from "react";
 
 type ComponentWithAsChild = {
@@ -18,9 +19,11 @@ export const SafeSlot = React.forwardRef<
     }
     
     // For regular components, clone with props and ref
+    // Use forwardRef properly by not passing ref directly in props object
     return React.cloneElement(children, {
       ...props,
-      ref: ref as React.Ref<unknown>, // Cast to help TypeScript
+      // Only forward ref if it's a valid element type that can accept refs
+      ...(typeof children.type !== 'string' && { ref }),
     });
   }
 
