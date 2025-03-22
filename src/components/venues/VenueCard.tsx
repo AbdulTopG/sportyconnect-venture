@@ -2,8 +2,9 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, IndianRupee } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { VenueWithRelations } from '@/integrations/supabase/client';
+import ResponsiveImage from '@/components/ui/responsive-image';
 
 interface VenueCardProps {
   venue: VenueWithRelations;
@@ -18,10 +19,12 @@ const VenueCard = ({ venue }: VenueCardProps) => {
   return (
     <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="aspect-video relative overflow-hidden">
-        <img 
-          src={primaryImage} 
-          alt={venue.name} 
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+        <ResponsiveImage
+          src={primaryImage}
+          alt={venue.name}
+          aspectRatio="video"
+          className="transition-transform duration-500 hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         <div className="absolute top-2 right-2">
           <Badge className="bg-sportyfi-orange">₹{venue.price_per_hour}/hr</Badge>
