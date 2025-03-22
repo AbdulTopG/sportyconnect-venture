@@ -52,7 +52,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-function Router() {
+function App() {
   return (
     <React.StrictMode>
       <RouterProvider router={router} />
@@ -60,4 +60,4 @@ function Router() {
   );
 }
 
-export default Router;
+export default App;
