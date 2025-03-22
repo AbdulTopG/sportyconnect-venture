@@ -1,12 +1,14 @@
 
-// Re-export the toast primitive components through this file
-import { 
-  Toast, 
-  ToastClose, 
-  ToastDescription, 
-  ToastProvider, 
-  ToastTitle, 
-  ToastViewport, 
+/**
+ * This file re-exports the toast primitive components
+ */
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
   ToastAction,
   type ToastActionElement,
   type ToastProps
