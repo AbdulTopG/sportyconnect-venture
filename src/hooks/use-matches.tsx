@@ -65,36 +65,23 @@ export function useMatches(selectedSport: string | null) {
     
     fetchMatches();
     
-    // Set up real-time subscription to matches
+    // Set up real-time subscription to matches table for any changes
     const matchesChannel = supabase
-      .channel('public:matches')
+      .channel('public:matches:all')
       .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'matches' }, 
-        (payload) => {
+        { event: '*', schema: 'public', table: 'matches' }, 
+        async (payload) => {
           if (!isMounted) return;
           
-          console.log('New match created:', payload);
-          const newMatch = payload.new as Match;
+          console.log('Match data changed:', payload);
           
-          // Only add the match if it matches the current filter
-          if (!selectedSport || newMatch.sport === selectedSport) {
-            setMatches(currentMatches => {
-              if (!currentMatches || !Array.isArray(currentMatches)) {
-                return [newMatch];
-              }
-              
-              // Check if the match already exists in our list
-              if (currentMatches.some(match => match.id === newMatch.id)) {
-                return currentMatches;
-              }
-              // Add the new match and re-sort
-              const updatedMatches = [...currentMatches, newMatch];
-              return updatedMatches.sort((a, b) => 
-                new Date(a.match_time).getTime() - new Date(b.match_time).getTime()
-              );
-            });
-            
-            // Show a toast notification for newly created matches
+          // Refetch all matches to ensure we have the latest data
+          // This is more reliable than trying to update individual matches
+          fetchMatches();
+          
+          // Show toast notification for newly created matches
+          if (payload.eventType === 'INSERT') {
+            const newMatch = payload.new as Match;
             if (newMatch.host_id !== user?.id) {
               toast({
                 title: "New Match Created",
@@ -106,13 +93,30 @@ export function useMatches(selectedSport: string | null) {
       )
       .subscribe();
     
-    console.log('Subscribed to realtime updates for matches');
+    // Set up real-time subscription to participants table
+    // Changes here affect available_slots in matches
+    const participantsChannel = supabase
+      .channel('public:participants:all')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'participants' },
+        (payload) => {
+          if (!isMounted) return;
+          
+          console.log('Participants data changed:', payload);
+          // Refetch all matches to get updated available_slots
+          fetchMatches();
+        }
+      )
+      .subscribe();
+    
+    console.log('Subscribed to realtime updates for matches and participants');
     
     // Cleanup function
     return () => {
       isMounted = false;
       console.log('Unsubscribing from realtime updates');
       supabase.removeChannel(matchesChannel);
+      supabase.removeChannel(participantsChannel);
     };
   }, [selectedSport, user?.id]);
 
