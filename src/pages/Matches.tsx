@@ -15,6 +15,7 @@ import MatchesErrorState from '@/components/match/MatchesErrorState';
 import MatchesEmptyState from '@/components/match/MatchesEmptyState';
 
 const Matches = () => {
+  console.log("Rendering Matches page");
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -31,13 +32,13 @@ const Matches = () => {
   }, [location.search]);
 
   // Use the hook to fetch and manage matches
-  const { matches, isLoading, error } = useMatches(selectedSport);
+  const { matches, isLoading, error, isInitialLoad } = useMatches(selectedSport);
 
-  console.log("Matches component rendering with:", { 
+  console.log("Matches component state:", { 
     isLoading, 
     error, 
     matchesCount: matches?.length || 0,
-    matches
+    isInitialLoad
   });
 
   // Extract unique sports from the matches for filtering
@@ -101,7 +102,7 @@ const Matches = () => {
             </div>
             
             {isLoading ? (
-              <MatchesLoadingState />
+              <MatchesLoadingState isInitialLoad={isInitialLoad} />
             ) : error ? (
               <MatchesErrorState 
                 error={error} 

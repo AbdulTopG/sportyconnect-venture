@@ -12,8 +12,6 @@ const MatchesLoadingState: React.FC<MatchesLoadingStateProps> = ({
   message = "Loading matches...",
   isInitialLoad = true
 }) => {
-  console.log("Rendering MatchesLoadingState with message:", message);
-  
   if (isInitialLoad) {
     return (
       <div className="flex justify-center py-12">
@@ -30,7 +28,7 @@ const MatchesLoadingState: React.FC<MatchesLoadingStateProps> = ({
   return (
     <div className="space-y-4">
       {Array(3).fill(0).map((_, i) => (
-        <div key={i} className="border rounded-lg p-4">
+        <div key={i} className="border rounded-lg p-4 shadow-sm">
           <div className="flex justify-between items-start mb-4">
             <Skeleton className="h-6 w-1/3" />
             <Skeleton className="h-5 w-16" />

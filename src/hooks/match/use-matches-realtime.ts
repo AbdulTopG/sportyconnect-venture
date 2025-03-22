@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
 
 type RealtimeConfig = {
   onMatchesChange: () => void;
@@ -13,14 +12,13 @@ type RealtimeConfig = {
  * Hook to handle real-time subscriptions for matches with improved stability
  */
 const useMatchesRealtime = ({ onMatchesChange, onParticipantsChange }: RealtimeConfig) => {
-  const { user } = useAuth();
   const matchesChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const participantsChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
   
   useEffect(() => {
     let isMounted = true;
-    let retryCount = 0;
-    const maxRetries = 3;
     
     const setupSubscriptions = () => {
       try {
@@ -38,33 +36,22 @@ const useMatchesRealtime = ({ onMatchesChange, onParticipantsChange }: RealtimeC
           .channel('public:matches:all')
           .on('postgres_changes', 
             { event: '*', schema: 'public', table: 'matches' }, 
-            async (payload) => {
+            (payload) => {
               if (!isMounted) return;
               
-              console.log('Match data changed:', payload);
+              console.log('Match data changed:', payload.eventType);
               
               // Refetch all matches to ensure we have the latest data
               onMatchesChange();
-              
-              // Show toast notification for newly created matches
-              if (payload.eventType === 'INSERT') {
-                const newMatch = payload.new as any;
-                if (newMatch.host_id !== user?.id) {
-                  toast({
-                    title: "New Match Created",
-                    description: `A new ${newMatch.sport} match has been added.`,
-                  });
-                }
-              }
             }
           )
           .subscribe((status) => {
             console.log(`Matches subscription status: ${status}`);
             
-            if (status === 'CHANNEL_ERROR' && isMounted && retryCount < maxRetries) {
-              console.log(`Retrying matches subscription (attempt ${retryCount + 1}/${maxRetries})...`);
-              retryCount++;
-              setTimeout(setupSubscriptions, 1000 * retryCount); // Exponential backoff
+            if (status === 'CHANNEL_ERROR' && isMounted && retryCountRef.current < maxRetries) {
+              console.log(`Retrying matches subscription (attempt ${retryCountRef.current + 1}/${maxRetries})...`);
+              retryCountRef.current++;
+              setTimeout(setupSubscriptions, 1000 * retryCountRef.current); // Exponential backoff
             }
           });
         
@@ -78,7 +65,7 @@ const useMatchesRealtime = ({ onMatchesChange, onParticipantsChange }: RealtimeC
             (payload) => {
               if (!isMounted) return;
               
-              console.log('Participants data changed:', payload);
+              console.log('Participants data changed:', payload.eventType);
               // Refetch all matches to get updated available_slots
               onParticipantsChange();
             }
@@ -95,12 +82,15 @@ const useMatchesRealtime = ({ onMatchesChange, onParticipantsChange }: RealtimeC
       }
     };
     
-    setupSubscriptions();
+    // Set a small timeout to ensure all necessary initialization is complete
+    const timer = setTimeout(() => {
+      setupSubscriptions();
+    }, 100);
     
     // Cleanup function
     return () => {
+      clearTimeout(timer);
       isMounted = false;
-      console.log('Unsubscribing from realtime updates');
       
       if (matchesChannelRef.current) {
         supabase.removeChannel(matchesChannelRef.current);
@@ -109,8 +99,10 @@ const useMatchesRealtime = ({ onMatchesChange, onParticipantsChange }: RealtimeC
       if (participantsChannelRef.current) {
         supabase.removeChannel(participantsChannelRef.current);
       }
+      
+      console.log('Unsubscribed from realtime updates');
     };
-  }, [onMatchesChange, onParticipantsChange, user?.id]);
+  }, [onMatchesChange, onParticipantsChange]);
 };
 
 export default useMatchesRealtime;

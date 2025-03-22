@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, Match } from '@/integrations/supabase/client';
 
 /**
@@ -10,6 +10,15 @@ const useFetchMatches = (selectedSport: string | null) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const fetchMatches = useCallback(async () => {
     // Cancel any in-flight requests
@@ -49,7 +58,7 @@ const useFetchMatches = (selectedSport: string | null) => {
         return;
       }
       
-      console.log("Matches fetched:", data);
+      console.log("Matches fetched:", data?.length || 0);
       
       if (data === null) {
         setMatches([]);
@@ -68,21 +77,7 @@ const useFetchMatches = (selectedSport: string | null) => {
         setIsLoading(false);
       }
     }
-    
-    return () => {
-      isMounted = false;
-      abortControllerRef.current = null;
-    };
   }, [selectedSport]);
-
-  // Cleanup on unmount
-  useCallback(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
 
   return {
     matches,

@@ -2,6 +2,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import useFetchMatches from './match/use-fetch-matches';
 import useMatchesRealtime from './match/use-matches-realtime';
+import { toast } from './use-toast';
 
 export function useMatches(selectedSport: string | null) {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -9,17 +10,34 @@ export function useMatches(selectedSport: string | null) {
 
   // Set up fetch on initial load and when sport changes
   useEffect(() => {
+    let isMounted = true;
+    
     const loadMatches = async () => {
       try {
         await fetchMatches();
       } catch (err) {
         console.error('Error in initial matches load:', err);
+        if (isMounted) {
+          toast({
+            title: "Error loading matches",
+            description: "Please try again later",
+            variant: "destructive",
+          });
+        }
       } finally {
-        setIsInitialLoad(false);
+        if (isMounted) {
+          setIsInitialLoad(false);
+        }
       }
     };
     
+    // Reset initial load state when sport changes
+    setIsInitialLoad(true);
     loadMatches();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [fetchMatches, selectedSport]);
   
   // Callbacks for real-time updates
