@@ -13,17 +13,19 @@ interface MatchCardProps {
 
 const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
   const navigate = useNavigate();
-  const [currentMatch, setCurrentMatch] = useState<Match>(match);
+  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
   
   // Update local state when match prop changes
   useEffect(() => {
-    if (match) {
+    if (match && typeof match === 'object') {
       setCurrentMatch(match);
     }
   }, [match]);
   
+  // Don't render if no match data is available
   if (!currentMatch) {
-    return null; // Don't render if no match data
+    console.log("No match data available for MatchCard");
+    return null;
   }
   
   const isLive = Math.random() > 0.7;
@@ -38,6 +40,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
 
   // Safely extract match properties with fallbacks
   const { 
+    id,
     sport = "unknown", 
     location = "unknown location", 
     match_time = new Date().toISOString(),
@@ -92,7 +95,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
           </Button>
         )}
         <Button 
-          onClick={() => navigate(`/matches/${currentMatch.id}`)}
+          onClick={() => navigate(`/matches/${id}`)}
           className="flex-1 bg-sportyfi-orange hover:bg-red-600 text-white"
         >
           View Details

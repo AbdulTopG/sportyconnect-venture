@@ -12,7 +12,11 @@ export function useMatches(selectedSport: string | null) {
 
   // Fetch matches from Supabase
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchMatches = async () => {
+      if (!isMounted) return;
+      
       setIsLoading(true);
       setError(null);
       
@@ -30,6 +34,8 @@ export function useMatches(selectedSport: string | null) {
         
         const { data, error: supabaseError } = await query;
         
+        if (!isMounted) return;
+        
         if (supabaseError) {
           console.error("Error fetching matches:", supabaseError);
           setError("Failed to load matches. Please try again.");
@@ -38,13 +44,22 @@ export function useMatches(selectedSport: string | null) {
         }
         
         console.log("Matches fetched:", data);
-        setMatches(data || []);
+        
+        if (data === null) {
+          setMatches([]);
+        } else {
+          setMatches(data);
+        }
       } catch (err) {
+        if (!isMounted) return;
+        
         console.error("Unexpected error fetching matches:", err);
         setError("An unexpected error occurred. Please try again.");
         setMatches([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     
@@ -56,12 +71,18 @@ export function useMatches(selectedSport: string | null) {
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'matches' }, 
         (payload) => {
+          if (!isMounted) return;
+          
           console.log('New match created:', payload);
           const newMatch = payload.new as Match;
           
           // Only add the match if it matches the current filter
           if (!selectedSport || newMatch.sport === selectedSport) {
             setMatches(currentMatches => {
+              if (!currentMatches || !Array.isArray(currentMatches)) {
+                return [newMatch];
+              }
+              
               // Check if the match already exists in our list
               if (currentMatches.some(match => match.id === newMatch.id)) {
                 return currentMatches;
@@ -89,6 +110,7 @@ export function useMatches(selectedSport: string | null) {
     
     // Cleanup function
     return () => {
+      isMounted = false;
       console.log('Unsubscribing from realtime updates');
       supabase.removeChannel(matchesChannel);
     };
