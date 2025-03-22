@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Match } from '@/integrations/supabase/client';
+import { Match, supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Users, PlayCircle } from 'lucide-react';
 
 interface MatchCardProps {
@@ -21,6 +21,74 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onWatchMatch }) => {
       setCurrentMatch(match);
     }
   }, [match]);
+  
+  // Subscribe to real-time updates for this specific match
+  useEffect(() => {
+    if (!match?.id) return;
+    
+    console.log(`Setting up real-time subscription for match ${match.id}`);
+    
+    const channel = supabase
+      .channel(`match-card-${match.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches',
+          filter: `id=eq.${match.id}`
+        },
+        (payload) => {
+          console.log('Match data changed:', payload);
+          if (payload.new) {
+            setCurrentMatch(payload.new as Match);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'participants',
+          filter: `match_id=eq.${match.id}`
+        },
+        (payload) => {
+          console.log('Participants changed:', payload);
+          // Fetch the updated match data when participants change
+          fetchUpdatedMatch(match.id);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      console.log(`Cleaning up real-time subscription for match ${match.id}`);
+      supabase.removeChannel(channel);
+    };
+  }, [match?.id]);
+  
+  // Helper function to fetch the latest match data
+  const fetchUpdatedMatch = async (matchId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('id', matchId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching updated match:', error);
+        return;
+      }
+      
+      if (data) {
+        console.log('Updated match data:', data);
+        setCurrentMatch(data);
+      }
+    } catch (err) {
+      console.error('Error in fetchUpdatedMatch:', err);
+    }
+  };
   
   // Don't render if no match data is available
   if (!currentMatch) {
