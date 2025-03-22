@@ -1,22 +1,23 @@
+
 import React from "react";
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import App from "./pages/App";
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
-import Venue from "./pages/Venue";
+import VenueDetail from "./pages/VenueDetail";
 import Matches from "./pages/Matches";
 import Bookings from "./pages/Bookings";
 import Venues from "./pages/Venues";
-import VenueRequest from "./pages/VenueRequest";
+import RequestVenue from "./pages/RequestVenue";
 import Messages from "./pages/Messages";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Index />,
     errorElement: <NotFound />,
     children: [
       {
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/venue/:id",
-        element: <Venue />,
+        element: <VenueDetail />,
       },
       {
         path: "/matches",
@@ -41,7 +42,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/venue-request",
-        element: <VenueRequest />,
+        element: <RequestVenue />,
       },
       {
         path: "/messages",

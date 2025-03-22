@@ -33,13 +33,32 @@ export const useMessages = () => {
         .from('messages')
         .select(`
           id, content, created_at, read,
-          sender_id, sender_profile:profiles!sender_id(username, avatar_url),
-          receiver_id, receiver_profile:profiles!receiver_id(username, avatar_url)
+          sender_id, receiver_id
         `)
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
       
       if (messagesError) throw messagesError;
+      
+      // Get profile data for all users involved in conversations
+      const userIds = new Set<string>();
+      messagesData?.forEach(message => {
+        if (message.sender_id !== user.id) userIds.add(message.sender_id);
+        if (message.receiver_id !== user.id) userIds.add(message.receiver_id);
+      });
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', Array.from(userIds));
+        
+      if (profilesError) throw profilesError;
+      
+      // Create a map of user profiles for easy lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
       
       // Process messages to get unique conversations
       const conversationsMap = new Map<string, Conversation>();
@@ -47,13 +66,13 @@ export const useMessages = () => {
       messagesData?.forEach(message => {
         const isUserSender = message.sender_id === user.id;
         const otherUserId = isUserSender ? message.receiver_id : message.sender_id;
-        const otherUserProfile = isUserSender ? message.receiver_profile : message.sender_profile;
+        const otherUserProfile = profilesMap.get(otherUserId);
         
         if (!conversationsMap.has(otherUserId)) {
           conversationsMap.set(otherUserId, {
             user_id: otherUserId,
-            username: otherUserProfile?.username,
-            avatar_url: otherUserProfile?.avatar_url,
+            username: otherUserProfile?.username || null,
+            avatar_url: otherUserProfile?.avatar_url || null,
             last_message: message.content,
             last_message_time: message.created_at,
             unread_count: (!isUserSender && !message.read) ? 1 : 0
@@ -84,22 +103,42 @@ export const useMessages = () => {
     setActiveConversation(otherUserId);
     
     try {
-      const { data, error } = await supabase
+      // Get messages between current user and the other user
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select(`
-          id, content, created_at, read, sender_id, receiver_id,
-          sender_profile:profiles!sender_id(username, avatar_url),
-          receiver_profile:profiles!receiver_id(username, avatar_url)
+          id, content, created_at, read, sender_id, receiver_id
         `)
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${user.id})`)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (messagesError) throw messagesError;
       
-      setMessages(data || []);
+      // Get profiles for both users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', [user.id, otherUserId]);
+      
+      if (profilesError) throw profilesError;
+      
+      // Create a map of user profiles
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
+      
+      // Combine messages with profile data
+      const messagesWithProfiles = messagesData?.map(message => ({
+        ...message,
+        sender_profile: profilesMap.get(message.sender_id) || null,
+        receiver_profile: profilesMap.get(message.receiver_id) || null
+      })) || [];
+      
+      setMessages(messagesWithProfiles as Message[]);
       
       // Mark messages as read
-      const unreadMessages = data?.filter(m => 
+      const unreadMessages = messagesData?.filter(m => 
         m.receiver_id === user.id && !m.read
       ).map(m => m.id) || [];
       
