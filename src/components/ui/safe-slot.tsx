@@ -1,4 +1,3 @@
-
 import React, { type ComponentPropsWithoutRef } from "react";
 
 type ComponentWithAsChild = {
@@ -12,22 +11,17 @@ export const SafeSlot = React.forwardRef<
 >(({ asChild, children, ...props }, ref) => {
   // When asChild is true, clone the child and pass it the props
   if (asChild && React.isValidElement(children)) {
-    // Pass the ref and props to the child element
-    return React.cloneElement(
-      children,
-      {
-        ...props,
-        // For ref forwarding to work correctly with any component
-        ref: (children.type === React.Fragment)
-          ? undefined 
-          : ((val: unknown) => {
-              // Handle function refs
-              if (typeof ref === "function") ref(val);
-              // Handle object refs
-              else if (ref !== null) (ref as React.MutableRefObject<unknown>).current = val;
-            })
-      }
-    );
+    // Handle differently based on the type of the child component
+    if (children.type === React.Fragment) {
+      // Don't try to forward ref to Fragment
+      return React.cloneElement(children, props);
+    }
+    
+    // For regular components, clone with props and ref
+    return React.cloneElement(children, {
+      ...props,
+      ref: ref as React.Ref<unknown>, // Cast to help TypeScript
+    });
   }
 
   // Otherwise, render a div with the props

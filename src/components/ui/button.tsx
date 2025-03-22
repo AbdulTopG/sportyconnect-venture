@@ -43,12 +43,27 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onClick, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // Create a wrapped onClick handler to add logging
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      // Log button click with text content to help identify which button was clicked
+      console.log("Button clicked:", React.Children.toArray(children)
+        .filter(child => typeof child === 'string' || typeof child === 'number')
+        .join(' ') || 'Button with no text content');
+      
+      // Call the original onClick handler if it exists
+      if (onClick) {
+        onClick(e);
+      }
+    };
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        onClick={handleClick}
         {...props}
       />
     )
