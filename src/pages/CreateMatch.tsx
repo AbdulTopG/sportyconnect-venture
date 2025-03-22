@@ -51,9 +51,6 @@ const CreateMatch = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent duplicate submissions
-    if (isSubmitting) return;
-    
     // Check if user is logged in before submitting
     if (!user) {
       toast({
@@ -316,11 +313,10 @@ const CreateMatch = () => {
             <div className="pt-2">
               <Button 
                 type="submit" 
-                isLoading={isSubmitting}
-                loadingText="Creating Match..."
+                disabled={isSubmitting}
                 className="w-full bg-sportyfi-orange hover:bg-red-600 text-white"
               >
-                Create Match
+                {isSubmitting ? "Creating Match..." : "Create Match"}
               </Button>
             </div>
           </form>
