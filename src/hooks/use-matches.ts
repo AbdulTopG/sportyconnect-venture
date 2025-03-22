@@ -34,20 +34,21 @@ export const useMatches = (initialSport: string | null = null) => {
         // Sort by match time, most recent first
         query = query.order('match_time', { ascending: true });
         
-        const { data, error } = await query;
+        const { data, error: supabaseError } = await query;
         
-        if (error) {
-          console.error("Error fetching matches:", error);
+        if (supabaseError) {
+          console.error("Error fetching matches:", supabaseError);
           setError("Failed to load matches. Please try again.");
+          setIsLoading(false);
           return;
         }
         
         console.log("Matches fetched:", data);
         setMatches(data || []);
+        setIsLoading(false);
       } catch (err) {
         console.error("Unexpected error fetching matches:", err);
         setError("An unexpected error occurred. Please try again.");
-      } finally {
         setIsLoading(false);
       }
     };
@@ -159,7 +160,7 @@ export const useMatches = (initialSport: string | null = null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [matches, isSubscribed]);
+  }, [isSubscribed]);
 
   // Compute all unique sports from the matches
   const allSports = Array.from(new Set(matches.map(match => match.sport)));
