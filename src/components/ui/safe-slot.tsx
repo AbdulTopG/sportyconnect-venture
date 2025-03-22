@@ -1,3 +1,4 @@
+
 import React, { type ComponentPropsWithoutRef } from "react";
 
 type ComponentWithAsChild = {
@@ -11,9 +12,11 @@ export const SafeSlot = React.forwardRef<
 >(({ asChild, children, ...props }, ref) => {
   // When asChild is true, clone the child and pass it the props
   if (asChild && React.isValidElement(children)) {
+    // Use type assertion to fix the TypeScript error
     return React.cloneElement(children, {
       ...props,
-      ref,
+      // TypeScript needs help understanding that the ref can be assigned
+      ref: ref as React.Ref<unknown>,
     });
   }
 
