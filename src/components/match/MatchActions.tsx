@@ -17,6 +17,7 @@ interface MatchActionsProps {
 }
 
 const MatchActions = ({ 
+  match,
   userIsParticipant,
   isJoining,
   matchIsFull,
@@ -35,7 +36,14 @@ const MatchActions = ({
           variant="destructive"
           className="w-full"
         >
-          {isJoining ? "Processing..." : "Leave Match"}
+          {isJoining ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Leave Match"
+          )}
         </Button>
       ) : (
         <Button 
@@ -43,7 +51,18 @@ const MatchActions = ({
           disabled={isJoining || matchIsFull || isHost}
           className={`w-full ${!matchIsFull && !isHost ? "bg-sportyfi-orange hover:bg-red-600 text-white" : ""}`}
         >
-          {isJoining ? "Joining..." : isHost ? "You're the host" : matchIsFull ? "Match Full" : "Join This Match"}
+          {isJoining ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Joining...
+            </>
+          ) : isHost ? (
+            "You're the host"
+          ) : matchIsFull ? (
+            "Match Full"
+          ) : (
+            "Join This Match"
+          )}
         </Button>
       )}
       

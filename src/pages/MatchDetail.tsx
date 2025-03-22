@@ -41,102 +41,152 @@ const MatchDetail = () => {
   const [match, setMatch] = useState<Match | null>(null);
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
   const [host, setHost] = useState<Host | null>(null);
+  const [isJoinSuccess, setIsJoinSuccess] = useState(false);
 
-  useEffect(() => {
-    const fetchMatchDetails = async () => {
-      if (!id) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const { data: matchData, error: matchError } = await supabase
-          .from('matches')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (matchError) {
-          console.error("Error fetching match:", matchError);
-          setError("Failed to load match details. Please try again.");
-          return;
-        }
-        
-        setMatch(matchData);
-        
-        const { data: participantsData, error: participantsError } = await supabase
-          .from('participants')
-          .select('*')
-          .eq('match_id', id);
-        
-        if (participantsError) {
-          console.error("Error fetching participants:", participantsError);
-          setError("Failed to load participants. Please try again.");
-          return;
-        }
-        
-        console.log("Participants fetched:", participantsData);
-        
-        if (participantsData && participantsData.length > 0) {
-          const enhancedParticipants: ParticipantWithProfile[] = [];
-          
-          for (const participant of participantsData) {
-            try {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', participant.user_id)
-                .maybeSingle();
-              
-              enhancedParticipants.push({
-                ...participant,
-                profile: {
-                  username: profileData?.username || null,
-                }
-              });
-            } catch (err) {
-              console.error("Error fetching profile for participant:", err);
-              enhancedParticipants.push({
-                ...participant,
-                profile: { username: null }
-              });
-            }
-          }
-          
-          setParticipants(enhancedParticipants);
-        } else {
-          setParticipants([]);
-        }
-        
-        if (matchData.host_id) {
-          const { data: hostData, error: hostError } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', matchData.host_id)
-            .maybeSingle();
-          
-          if (hostError && hostError.code !== 'PGRST116') {
-            console.error("Error fetching host:", hostError);
-          } else if (hostData) {
-            setHost({
-              id: matchData.host_id,
-              username: hostData.username || undefined
-            });
-          } else {
-            setHost({
-              id: matchData.host_id
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Unexpected error fetching match details:", err);
-        setError("An unexpected error occurred. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Function to fetch match details and participants
+  const fetchMatchDetails = async () => {
+    if (!id) return;
     
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data: matchData, error: matchError } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (matchError) {
+        console.error("Error fetching match:", matchError);
+        setError("Failed to load match details. Please try again.");
+        return;
+      }
+      
+      setMatch(matchData);
+      
+      await fetchParticipants();
+      
+      if (matchData.host_id) {
+        const { data: hostData, error: hostError } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', matchData.host_id)
+          .maybeSingle();
+        
+        if (hostError && hostError.code !== 'PGRST116') {
+          console.error("Error fetching host:", hostError);
+        } else if (hostData) {
+          setHost({
+            id: matchData.host_id,
+            username: hostData.username || undefined
+          });
+        } else {
+          setHost({
+            id: matchData.host_id
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching match details:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Dedicated function to fetch participants
+  const fetchParticipants = async () => {
+    try {
+      const { data: participantsData, error: participantsError } = await supabase
+        .from('participants')
+        .select('*')
+        .eq('match_id', id);
+      
+      if (participantsError) {
+        console.error("Error fetching participants:", participantsError);
+        return;
+      }
+      
+      console.log("Participants fetched:", participantsData);
+      
+      if (participantsData && participantsData.length > 0) {
+        const enhancedParticipants: ParticipantWithProfile[] = [];
+        
+        for (const participant of participantsData) {
+          try {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('id', participant.user_id)
+              .maybeSingle();
+            
+            enhancedParticipants.push({
+              ...participant,
+              profile: {
+                username: profileData?.username || null,
+              }
+            });
+          } catch (err) {
+            console.error("Error fetching profile for participant:", err);
+            enhancedParticipants.push({
+              ...participant,
+              profile: { username: null }
+            });
+          }
+        }
+        
+        setParticipants(enhancedParticipants);
+      } else {
+        setParticipants([]);
+      }
+    } catch (err) {
+      console.error("Error in fetchParticipants:", err);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
     fetchMatchDetails();
+  }, [id]);
+
+  // Set up realtime subscription to participants table
+  useEffect(() => {
+    if (!id) return;
+    
+    // Subscribe to changes in the participants table for this match
+    const participantsChannel = supabase
+      .channel('participants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'participants',
+          filter: `match_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Participants change detected:', payload);
+          fetchParticipants();
+          
+          // If match data might have changed (available_slots), refetch match as well
+          supabase
+            .from('matches')
+            .select('*')
+            .eq('id', id)
+            .single()
+            .then(({ data, error }) => {
+              if (!error && data) {
+                setMatch(data);
+              }
+            });
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(participantsChannel);
+    };
   }, [id]);
 
   const userIsParticipant = user && participants.some(p => p.user_id === user.id);
@@ -157,8 +207,41 @@ const MatchDetail = () => {
     if (!match) return;
     
     setIsJoining(true);
+    setIsJoinSuccess(false);
     
     try {
+      // First check if the user is already a participant
+      if (userIsParticipant) {
+        toast({
+          title: "Already joined",
+          description: "You are already a participant in this match.",
+        });
+        setIsJoining(false);
+        return;
+      }
+      
+      // Fetch the latest match data to ensure we have accurate available_slots
+      const { data: latestMatchData, error: latestMatchError } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('id', match.id)
+        .single();
+      
+      if (latestMatchError) {
+        throw new Error("Could not fetch latest match data");
+      }
+      
+      if (latestMatchData.available_slots <= 0) {
+        toast({
+          title: "Match is full",
+          description: "Sorry, this match is already full.",
+          variant: "destructive",
+        });
+        setIsJoining(false);
+        return;
+      }
+      
+      // Start a transaction using RPC
       const { data, error } = await supabase
         .from('participants')
         .insert([
@@ -173,32 +256,45 @@ const MatchDetail = () => {
       
       console.log("Successfully joined match:", data);
       
+      // Update available slots
+      const newAvailableSlots = latestMatchData.available_slots - 1;
       const { error: updateError } = await supabase
         .from('matches')
-        .update({ available_slots: match.available_slots - 1 })
+        .update({ available_slots: newAvailableSlots })
         .eq('id', match.id);
       
       if (updateError) {
         console.error("Error updating match slots:", updateError);
-        toast({
-          title: "Warning",
-          description: "You've joined the match, but there was an issue updating the available slots.",
-          variant: "destructive",
-        });
-      } else {
-        setMatch(prev => prev ? {
-          ...prev,
-          available_slots: prev.available_slots - 1
-        } : null);
-        
-        if (data && data[0]) {
-          const newParticipant = data[0] as Participant;
-          setParticipants(prev => [...prev, {
-            ...newParticipant,
-            profile: { username: null }
-          }]);
-        }
+        // If we can't update the slots, we should remove the participant
+        await supabase
+          .from('participants')
+          .delete()
+          .eq('match_id', match.id)
+          .eq('user_id', user.id);
+          
+        throw new Error("Could not update available slots");
       }
+      
+      // Update local state
+      setMatch({
+        ...match,
+        available_slots: newAvailableSlots
+      });
+      
+      // Add the new participant to our local state
+      if (data && data[0]) {
+        const newParticipant = data[0] as Participant;
+        const enhancedParticipant: ParticipantWithProfile = {
+          ...newParticipant,
+          profile: {
+            username: user.email?.split('@')[0] || null
+          }
+        };
+        
+        setParticipants(prev => [...prev, enhancedParticipant]);
+      }
+      
+      setIsJoinSuccess(true);
       
       toast({
         title: "Success!",
@@ -211,6 +307,9 @@ const MatchDetail = () => {
         description: error.message || "There was an error joining the match. Please try again.",
         variant: "destructive",
       });
+      
+      // Refresh the data to ensure UI is in sync with the database
+      fetchMatchDetails();
     } finally {
       setIsJoining(false);
     }
@@ -222,6 +321,29 @@ const MatchDetail = () => {
     setIsJoining(true);
     
     try {
+      // Verify user is a participant
+      if (!userIsParticipant) {
+        toast({
+          title: "Not a participant",
+          description: "You are not participating in this match.",
+          variant: "destructive",
+        });
+        setIsJoining(false);
+        return;
+      }
+      
+      // Fetch the latest match data for accurate state
+      const { data: latestMatchData, error: latestMatchError } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('id', match.id)
+        .single();
+      
+      if (latestMatchError) {
+        throw new Error("Could not fetch latest match data");
+      }
+      
+      // Remove participant
       const { error } = await supabase
         .from('participants')
         .delete()
@@ -233,26 +355,25 @@ const MatchDetail = () => {
         throw error;
       }
       
+      // Update available slots
+      const newAvailableSlots = latestMatchData.available_slots + 1;
       const { error: updateError } = await supabase
         .from('matches')
-        .update({ available_slots: match.available_slots + 1 })
+        .update({ available_slots: newAvailableSlots })
         .eq('id', match.id);
       
       if (updateError) {
         console.error("Error updating match slots:", updateError);
-        toast({
-          title: "Warning",
-          description: "You've left the match, but there was an issue updating the available slots.",
-          variant: "destructive",
-        });
-      } else {
-        setMatch(prev => prev ? {
-          ...prev,
-          available_slots: prev.available_slots + 1
-        } : null);
-        
-        setParticipants(prev => prev.filter(p => p.user_id !== user.id));
+        throw new Error("Could not update available slots");
       }
+      
+      // Update local state
+      setMatch({
+        ...match,
+        available_slots: newAvailableSlots
+      });
+      
+      setParticipants(prev => prev.filter(p => p.user_id !== user.id));
       
       toast({
         title: "You've left the match",
@@ -265,6 +386,9 @@ const MatchDetail = () => {
         description: error.message || "There was an error leaving the match. Please try again.",
         variant: "destructive",
       });
+      
+      // Refresh data to ensure UI is in sync with the database
+      fetchMatchDetails();
     } finally {
       setIsJoining(false);
     }
@@ -318,7 +442,7 @@ const MatchDetail = () => {
               
               <MatchActions
                 match={match}
-                userIsParticipant={userIsParticipant}
+                userIsParticipant={userIsParticipant || isJoinSuccess}
                 isJoining={isJoining}
                 matchIsFull={matchIsFull}
                 isHost={isHost}
