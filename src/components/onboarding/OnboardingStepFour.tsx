@@ -4,12 +4,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 
+interface OnboardingFormData {
+  preferred_time: string;
+  lookingFor: string[];
+}
+
 interface OnboardingStepFourProps {
-  formData: {
-    preferred_time: string;
-    lookingFor: string[];
-  };
-  updateFormData: (data: Partial<typeof formData>) => void;
+  formData: OnboardingFormData;
+  updateFormData: (data: Partial<OnboardingFormData>) => void;
 }
 
 const timePreferences = [

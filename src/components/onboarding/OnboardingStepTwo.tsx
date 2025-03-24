@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 
+interface OnboardingFormData {
+  location: string;
+}
+
 interface OnboardingStepTwoProps {
-  formData: {
-    location: string;
-  };
-  updateFormData: (data: Partial<typeof formData>) => void;
+  formData: OnboardingFormData;
+  updateFormData: (data: Partial<OnboardingFormData>) => void;
 }
 
 const popularLocations = [

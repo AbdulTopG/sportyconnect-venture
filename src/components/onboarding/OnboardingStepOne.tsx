@@ -6,14 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface OnboardingFormData {
+  username: string;
+  fullName: string;
+  avatar_url: string;
+  bio: string;
+}
+
 interface OnboardingStepOneProps {
-  formData: {
-    username: string;
-    fullName: string;
-    avatar_url: string;
-    bio: string;
-  };
-  updateFormData: (data: Partial<typeof formData>) => void;
+  formData: OnboardingFormData;
+  updateFormData: (data: Partial<OnboardingFormData>) => void;
 }
 
 const OnboardingStepOne = ({ formData, updateFormData }: OnboardingStepOneProps) => {

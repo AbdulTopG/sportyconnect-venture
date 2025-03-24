@@ -4,13 +4,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 
+interface OnboardingFormData {
+  primary_sport: string;
+  preferred_sports: string[];
+  skill_level: string;
+}
+
 interface OnboardingStepThreeProps {
-  formData: {
-    primary_sport: string;
-    preferred_sports: string[];
-    skill_level: string;
-  };
-  updateFormData: (data: Partial<typeof formData>) => void;
+  formData: OnboardingFormData;
+  updateFormData: (data: Partial<OnboardingFormData>) => void;
 }
 
 const sportsList = [
