@@ -27,6 +27,7 @@ import AdminAddVenue from "./pages/AdminAddVenue";
 import AdminEditVenue from "./pages/AdminEditVenue";
 import UserDashboard from "./pages/UserDashboard";
 import WatchMatches from "./pages/WatchMatches";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/matches" element={<Matches />} />
             <Route path="/matches/create" element={<CreateMatch />} />
             <Route path="/matches/:id" element={<MatchDetail />} />
