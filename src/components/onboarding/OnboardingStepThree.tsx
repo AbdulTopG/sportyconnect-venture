@@ -1,8 +1,10 @@
+
 import React from "react";
 import PrimarySportSelector from "./sports/PrimarySportSelector";
 import SportsBadgeSelector from "./sports/SportsBadgeSelector";
 import SkillLevelSelector from "./sports/SkillLevelSelector";
 import { OnboardingFormData } from "@/hooks/use-onboarding-form";
+import { useSportSelection } from "@/hooks/use-sport-selection";
 
 interface OnboardingStepThreeProps {
   formData: OnboardingFormData;
@@ -10,52 +12,7 @@ interface OnboardingStepThreeProps {
 }
 
 const OnboardingStepThree: React.FC<OnboardingStepThreeProps> = ({ formData, updateFormData }) => {
-  const toggleSport = (sportId: string) => {
-    const isPrimary = formData.primary_sport === sportId;
-    const isSelected = (formData.preferred_sports || []).includes(sportId);
-    
-    if (isPrimary) {
-      // If it's the primary sport, just remove it from preferred (but keep it as primary)
-      if (isSelected) {
-        updateFormData({
-          preferred_sports: (formData.preferred_sports || []).filter(id => id !== sportId)
-        });
-      } else {
-        updateFormData({
-          preferred_sports: [...(formData.preferred_sports || []), sportId]
-        });
-      }
-    } else {
-      // If selecting a new sport
-      if (!isSelected) {
-        // Add to preferred
-        updateFormData({
-          preferred_sports: [...(formData.preferred_sports || []), sportId]
-        });
-      } else {
-        // Remove from preferred
-        updateFormData({
-          preferred_sports: (formData.preferred_sports || []).filter(id => id !== sportId)
-        });
-      }
-    }
-  };
-  
-  const setPrimarySport = (sportId: string) => {
-    // If this sport isn't already in preferred, add it
-    if (!(formData.preferred_sports || []).includes(sportId)) {
-      updateFormData({
-        primary_sport: sportId,
-        preferred_sports: [...(formData.preferred_sports || []), sportId]
-      });
-    } else {
-      updateFormData({ primary_sport: sportId });
-    }
-  };
-
-  const setSkillLevel = (value: string) => {
-    updateFormData({ skill_level: value });
-  };
+  const { toggleSport, setPrimarySport, setSkillLevel } = useSportSelection(formData, updateFormData);
 
   return (
     <div className="space-y-6 py-4">

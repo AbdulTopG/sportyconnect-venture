@@ -27,7 +27,7 @@ const SportsBadgeSelector: React.FC<SportsBadgeSelectorProps> = ({
             key={sport.id}
             variant={preferredSports.includes(sport.id) ? "default" : "outline"}
             className={cn(
-              "cursor-pointer text-sm py-1.5 px-3",
+              "cursor-pointer text-sm py-1.5 px-3 flex items-center gap-1",
               preferredSports.includes(sport.id) 
                 ? "bg-sportyfi-orange hover:bg-red-600"
                 : "hover:bg-gray-100",
@@ -35,7 +35,8 @@ const SportsBadgeSelector: React.FC<SportsBadgeSelectorProps> = ({
             )}
             onClick={() => toggleSport(sport.id)}
           >
-            {sport.icon} {sport.name}
+            <span className="w-4 h-4">{sport.icon}</span> 
+            <span>{sport.name}</span>
             {primarySport === sport.id && " (Primary)"}
           </Badge>
         ))}
