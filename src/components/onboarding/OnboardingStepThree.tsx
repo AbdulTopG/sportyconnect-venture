@@ -1,5 +1,4 @@
-
-import { Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
@@ -16,54 +15,65 @@ interface OnboardingStepThreeProps {
 }
 
 const sportsList = [
-  { id: "soccer", name: "Soccer", icon: "⚽" },
+  { id: "football", name: "Football", icon: "⚽" },
   { id: "basketball", name: "Basketball", icon: "🏀" },
+  { id: "cricket", name: "Cricket", icon: "🏏" },
   { id: "tennis", name: "Tennis", icon: "🎾" },
+  { id: "badminton", name: "Badminton", icon: "🏸" },
+  { id: "table_tennis", name: "Table Tennis", icon: "🏓" },
   { id: "volleyball", name: "Volleyball", icon: "🏐" },
+  { id: "swimming", name: "Swimming", icon: "🏊" },
   { id: "running", name: "Running", icon: "🏃" },
   { id: "cycling", name: "Cycling", icon: "🚴" },
-  { id: "swimming", name: "Swimming", icon: "🏊" },
-  { id: "golf", name: "Golf", icon: "⛳" },
   { id: "yoga", name: "Yoga", icon: "🧘" },
-  { id: "boxing", name: "Boxing", icon: "🥊" },
-  { id: "climbing", name: "Climbing", icon: "🧗" },
-  { id: "baseball", name: "Baseball", icon: "⚾" },
+  { id: "golf", name: "Golf", icon: "⛳" },
 ];
 
 const skillLevels = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
-  { value: "professional", label: "Professional" },
+  { value: "beginner", label: "Beginner", description: "New to the sport or play occasionally" },
+  { value: "intermediate", label: "Intermediate", description: "Regular player with some experience" },
+  { value: "advanced", label: "Advanced", description: "Experienced player with good skills" },
+  { value: "expert", label: "Expert", description: "Highly skilled, competitive player" },
 ];
 
 const OnboardingStepThree = ({ formData, updateFormData }: OnboardingStepThreeProps) => {
-  const handleSportSelection = (sportId: string) => {
-    const currentPreferred = [...formData.preferred_sports];
+  const toggleSport = (sportId: string) => {
+    const isPrimary = formData.primary_sport === sportId;
+    const isSelected = (formData.preferred_sports || []).includes(sportId);
     
-    if (currentPreferred.includes(sportId)) {
-      // Remove from preferred sports
-      updateFormData({
-        preferred_sports: currentPreferred.filter(id => id !== sportId),
-        // If removing primary sport, reset it
-        ...(formData.primary_sport === sportId ? { primary_sport: "" } : {})
-      });
+    if (isPrimary) {
+      // If it's the primary sport, just remove it from preferred (but keep it as primary)
+      if (isSelected) {
+        updateFormData({
+          preferred_sports: (formData.preferred_sports || []).filter(id => id !== sportId)
+        });
+      } else {
+        updateFormData({
+          preferred_sports: [...(formData.preferred_sports || []), sportId]
+        });
+      }
     } else {
-      // Add to preferred sports
-      updateFormData({
-        preferred_sports: [...currentPreferred, sportId],
-        // If this is the first sport, make it primary
-        ...(currentPreferred.length === 0 ? { primary_sport: sportId } : {})
-      });
+      // If selecting a new sport
+      if (!isSelected) {
+        // Add to preferred
+        updateFormData({
+          preferred_sports: [...(formData.preferred_sports || []), sportId]
+        });
+      } else {
+        // Remove from preferred
+        updateFormData({
+          preferred_sports: (formData.preferred_sports || []).filter(id => id !== sportId)
+        });
+      }
     }
   };
-
+  
   const setPrimarySport = (sportId: string) => {
-    // Ensure the sport is in preferred sports
-    if (!formData.preferred_sports.includes(sportId)) {
+    // If this sport isn't already in preferred, add it
+    if (!(formData.preferred_sports || []).includes(sportId)) {
       updateFormData({
-        preferred_sports: [...formData.preferred_sports, sportId],
-        primary_sport: sportId
+        primary_sport: sportId,
+        preferred_sports: [...(formData.preferred_sports || []), sportId]
       });
     } else {
       updateFormData({ primary_sport: sportId });
@@ -74,73 +84,81 @@ const OnboardingStepThree = ({ formData, updateFormData }: OnboardingStepThreePr
     <div className="space-y-6 py-4">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold mb-2">Your Sports</h2>
-        <p className="text-gray-500">Tell us which sports you're interested in</p>
+        <p className="text-gray-500">Tell us which sports you enjoy playing</p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <Label className="text-base">Select your sports (choose all that apply)</Label>
-          <div className="grid grid-cols-2 gap-3 mt-3 sm:grid-cols-3">
+          <Label className="text-base font-medium mb-3 block">Primary Sport</Label>
+          <p className="text-sm text-gray-500 mb-4">This is the main sport you're interested in</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {sportsList.map((sport) => (
               <div
                 key={sport.id}
                 className={cn(
-                  "relative flex items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all",
-                  formData.preferred_sports.includes(sport.id)
-                    ? "border-sportyfi-orange bg-orange-50"
-                    : "border-gray-200 hover:border-gray-300"
+                  "border rounded-lg p-3 flex items-center gap-3 cursor-pointer transition-all hover:border-sportyfi-orange",
+                  formData.primary_sport === sport.id 
+                    ? "border-2 border-sportyfi-orange bg-orange-50"
+                    : "border-gray-200"
                 )}
-                onClick={() => handleSportSelection(sport.id)}
+                onClick={() => setPrimarySport(sport.id)}
               >
-                {formData.preferred_sports.includes(sport.id) && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="h-4 w-4 text-sportyfi-orange" />
-                  </div>
-                )}
-                <div className="text-center">
-                  <div className="text-2xl mb-1">{sport.icon}</div>
-                  <p className="text-sm font-medium">{sport.name}</p>
-                </div>
+                <div className="text-2xl">{sport.icon}</div>
+                <div className="font-medium">{sport.name}</div>
               </div>
             ))}
           </div>
         </div>
-
-        {formData.preferred_sports.length > 0 && (
-          <div className="space-y-3">
-            <Label className="text-base">Select your primary sport</Label>
-            <RadioGroup
-              value={formData.primary_sport}
-              onValueChange={setPrimarySport}
-              className="grid grid-cols-2 gap-3 mt-3 sm:grid-cols-3"
-            >
-              {sportsList
-                .filter(sport => formData.preferred_sports.includes(sport.id))
-                .map(sport => (
-                  <div key={sport.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={sport.id} id={`primary-${sport.id}`} />
-                    <Label htmlFor={`primary-${sport.id}`} className="cursor-pointer">
-                      <span className="mr-1">{sport.icon}</span> {sport.name}
-                    </Label>
-                  </div>
-                ))}
-            </RadioGroup>
+        
+        <div>
+          <Label className="text-base font-medium mb-3 block">Other Sports</Label>
+          <p className="text-sm text-gray-500 mb-4">Select all other sports you're interested in</p>
+          
+          <div className="flex flex-wrap gap-2">
+            {sportsList.map((sport) => (
+              <Badge
+                key={sport.id}
+                variant={(formData.preferred_sports || []).includes(sport.id) ? "default" : "outline"}
+                className={cn(
+                  "cursor-pointer text-sm py-1.5 px-3",
+                  (formData.preferred_sports || []).includes(sport.id) 
+                    ? "bg-sportyfi-orange hover:bg-red-600"
+                    : "hover:bg-gray-100",
+                  formData.primary_sport === sport.id && "border-2"
+                )}
+                onClick={() => toggleSport(sport.id)}
+              >
+                {sport.icon} {sport.name}
+                {formData.primary_sport === sport.id && " (Primary)"}
+              </Badge>
+            ))}
           </div>
-        )}
-
-        <div className="space-y-3">
-          <Label className="text-base">What's your skill level?</Label>
+        </div>
+        
+        <div>
+          <Label className="text-base font-medium mb-3 block">Your Skill Level</Label>
+          
           <RadioGroup
-            value={formData.skill_level}
+            value={formData.skill_level || "intermediate"}
             onValueChange={(value) => updateFormData({ skill_level: value })}
-            className="grid grid-cols-2 gap-3 mt-3"
+            className="space-y-3"
           >
-            {skillLevels.map(level => (
-              <div key={level.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={level.value} id={`skill-${level.value}`} />
-                <Label htmlFor={`skill-${level.value}`} className="cursor-pointer">
-                  {level.label}
-                </Label>
+            {skillLevels.map((level) => (
+              <div
+                key={level.value}
+                className={cn(
+                  "flex items-start space-x-2 border rounded-lg p-3 transition-all",
+                  formData.skill_level === level.value ? "border-sportyfi-orange bg-orange-50" : "border-gray-200"
+                )}
+              >
+                <RadioGroupItem value={level.value} id={`skill-${level.value}`} className="mt-1" />
+                <div className="space-y-1">
+                  <Label htmlFor={`skill-${level.value}`} className="font-medium cursor-pointer">
+                    {level.label}
+                  </Label>
+                  <p className="text-sm text-gray-500">{level.description}</p>
+                </div>
               </div>
             ))}
           </RadioGroup>

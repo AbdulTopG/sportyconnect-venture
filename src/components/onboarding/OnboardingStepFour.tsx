@@ -35,7 +35,7 @@ const lookingForOptions = [
 
 const OnboardingStepFour = ({ formData, updateFormData }: OnboardingStepFourProps) => {
   const handleLookingForChange = (value: string) => {
-    const current = [...formData.lookingFor];
+    const current = [...(formData.lookingFor || [])];
     
     if (current.includes(value)) {
       updateFormData({
@@ -63,7 +63,7 @@ const OnboardingStepFour = ({ formData, updateFormData }: OnboardingStepFourProp
           </div>
           
           <RadioGroup
-            value={formData.preferred_time}
+            value={formData.preferred_time || ""}
             onValueChange={(value) => updateFormData({ preferred_time: value })}
             className="grid grid-cols-2 gap-3 mt-3"
           >
@@ -89,7 +89,7 @@ const OnboardingStepFour = ({ formData, updateFormData }: OnboardingStepFourProp
               <div key={option.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`looking-${option.id}`}
-                  checked={formData.lookingFor.includes(option.id)}
+                  checked={(formData.lookingFor || []).includes(option.id)}
                   onCheckedChange={() => handleLookingForChange(option.id)}
                 />
                 <Label htmlFor={`looking-${option.id}`} className="cursor-pointer">
