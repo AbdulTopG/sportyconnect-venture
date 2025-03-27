@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Logo from './Logo';
 import NavigationLinks from './NavigationLinks';
 import AuthButtons from './AuthButtons';
+import ThemeToggle from './ThemeToggle';
 
 const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +41,9 @@ const MobileMenu = () => {
               onClick={() => setIsOpen(false)}
             />
             <div className="mt-auto border-t py-4 space-y-4">
+              <div className="flex justify-center pb-2">
+                <ThemeToggle />
+              </div>
               <AuthButtons 
                 className="space-y-4" 
                 isMobile={true} 
