@@ -13,6 +13,8 @@ interface OnboardingStepThreeProps {
 
 const OnboardingStepThree: React.FC<OnboardingStepThreeProps> = ({ formData, updateFormData }) => {
   const { toggleSport, setPrimarySport, setSkillLevel } = useSportSelection(formData, updateFormData);
+  
+  console.log("OnboardingStepThree formData:", formData);
 
   return (
     <div className="space-y-6 py-4">

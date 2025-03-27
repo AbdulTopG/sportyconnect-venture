@@ -2,7 +2,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { 
-  Dumbbell,
   CircleDot,
   Trophy,
   Activity,
@@ -20,18 +19,18 @@ interface Sport {
 }
 
 export const sportsList: Sport[] = [
-  { id: "football", name: "Football", icon: <CircleDot className="w-6 h-6" /> },
-  { id: "basketball", name: "Basketball", icon: <CircleDot className="w-6 h-6" /> },
-  { id: "cricket", name: "Cricket", icon: <Trophy className="w-6 h-6" /> },
-  { id: "tennis", name: "Tennis", icon: <Activity className="w-6 h-6" /> },
-  { id: "badminton", name: "Badminton", icon: <Activity className="w-6 h-6" /> },
-  { id: "table_tennis", name: "Table Tennis", icon: <Activity className="w-6 h-6" /> },
-  { id: "volleyball", name: "Volleyball", icon: <CircleDot className="w-6 h-6" /> },
-  { id: "swimming", name: "Swimming", icon: <Waves className="w-6 h-6" /> },
-  { id: "running", name: "Running", icon: <TimerReset className="w-6 h-6" /> },
-  { id: "cycling", name: "Cycling", icon: <Bike className="w-6 h-6" /> },
-  { id: "yoga", name: "Yoga", icon: <Flame className="w-6 h-6" /> },
-  { id: "golf", name: "Golf", icon: <Flag className="w-6 h-6" /> },
+  { id: "football", name: "Football", icon: <CircleDot className="w-4 h-4" /> },
+  { id: "basketball", name: "Basketball", icon: <CircleDot className="w-4 h-4" /> },
+  { id: "cricket", name: "Cricket", icon: <Trophy className="w-4 h-4" /> },
+  { id: "tennis", name: "Tennis", icon: <Activity className="w-4 h-4" /> },
+  { id: "badminton", name: "Badminton", icon: <Activity className="w-4 h-4" /> },
+  { id: "table_tennis", name: "Table Tennis", icon: <Activity className="w-4 h-4" /> },
+  { id: "volleyball", name: "Volleyball", icon: <CircleDot className="w-4 h-4" /> },
+  { id: "swimming", name: "Swimming", icon: <Waves className="w-4 h-4" /> },
+  { id: "running", name: "Running", icon: <TimerReset className="w-4 h-4" /> },
+  { id: "cycling", name: "Cycling", icon: <Bike className="w-4 h-4" /> },
+  { id: "yoga", name: "Yoga", icon: <Flame className="w-4 h-4" /> },
+  { id: "golf", name: "Golf", icon: <Flag className="w-4 h-4" /> },
 ];
 
 interface SportCardProps {

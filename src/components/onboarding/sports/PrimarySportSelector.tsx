@@ -12,6 +12,8 @@ const PrimarySportSelector: React.FC<PrimarySportSelectorProps> = ({
   primarySport, 
   setPrimarySport 
 }) => {
+  console.log("Rendering PrimarySportSelector with primarySport:", primarySport);
+
   return (
     <div>
       <Label className="text-base font-medium mb-3 block">Primary Sport</Label>

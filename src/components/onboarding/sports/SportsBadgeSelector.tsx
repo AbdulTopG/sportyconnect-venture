@@ -16,6 +16,9 @@ const SportsBadgeSelector: React.FC<SportsBadgeSelectorProps> = ({
   primarySport,
   toggleSport
 }) => {
+  console.log("Rendering SportsBadgeSelector with primarySport:", primarySport);
+  console.log("Preferred sports:", preferredSports);
+  
   return (
     <div>
       <Label className="text-base font-medium mb-3 block">Other Sports</Label>
