@@ -22,7 +22,7 @@ interface Sport {
 export const sportsList: Sport[] = [
   { id: "football", name: "Football", icon: <CircleDot className="w-6 h-6" /> },
   { id: "basketball", name: "Basketball", icon: <CircleDot className="w-6 h-6" /> },
-  { id: "cricket", name: "Cricket", icon: <Dumbbell className="w-6 h-6" /> },
+  { id: "cricket", name: "Cricket", icon: <Trophy className="w-6 h-6" /> },
   { id: "tennis", name: "Tennis", icon: <Activity className="w-6 h-6" /> },
   { id: "badminton", name: "Badminton", icon: <Activity className="w-6 h-6" /> },
   { id: "table_tennis", name: "Table Tennis", icon: <Activity className="w-6 h-6" /> },

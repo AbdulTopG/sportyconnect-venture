@@ -31,13 +31,13 @@ const SportsBadgeSelector: React.FC<SportsBadgeSelectorProps> = ({
               preferredSports.includes(sport.id) 
                 ? "bg-sportyfi-orange hover:bg-red-600"
                 : "hover:bg-gray-100",
-              primarySport === sport.id && "border-2"
+              primarySport === sport.id && "border-2 border-sportyfi-orange"
             )}
             onClick={() => toggleSport(sport.id)}
           >
             <span className="w-4 h-4">{sport.icon}</span> 
             <span>{sport.name}</span>
-            {primarySport === sport.id && " (Primary)"}
+            {primarySport === sport.id && <span className="ml-1 text-xs font-bold">(Primary)</span>}
           </Badge>
         ))}
       </div>
