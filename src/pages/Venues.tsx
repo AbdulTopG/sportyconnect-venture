@@ -1,8 +1,6 @@
-
 import React, { useState } from "react";
 import SportyFiHeader from "@/components/SportyFiHeader";
 import NavigationButtons from "@/components/NavigationButtons";
-import { useQuery } from "@tanstack/react-query";
 import VenueCard from "@/components/venues/VenueCard";
 import VenueFilter from "@/components/venues/VenueFilter";
 import { Map, MapPin } from "lucide-react";
