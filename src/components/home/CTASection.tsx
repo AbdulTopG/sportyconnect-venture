@@ -1,14 +1,11 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Trophy, Star, Calendar, Clock } from 'lucide-react';
-
 const CTASection = () => {
-  return (
-    <section className="py-16 relative overflow-hidden">
+  return <section className="py-16 relative overflow-hidden">
       {/* Background with overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-sportyfi-black to-sportyfi-darkGray z-0"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-sportyfi-orange/80 to-red-600/80 z-10 opacity-90"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-sportyfi-orange/80 to-red-600/80 z-10 opacity-90 bg-sportyfi-orange"></div>
       
       <div className="sportyfi-container relative z-20 text-white">
         <div className="max-w-3xl mx-auto text-center">
@@ -65,8 +62,6 @@ const CTASection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CTASection;
