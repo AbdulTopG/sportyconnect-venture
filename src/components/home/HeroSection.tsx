@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Map, Calendar, Search } from 'lucide-react';
@@ -72,7 +73,6 @@ const HeroSection = () => {
           
           <div className="hidden md:block relative">
             <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-2xl transform rotate-1">
-              <img src="https://images.unsplash.com/photo-1595435124324-81edc014bba9?q=80&w=1160" alt="Sports" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-sm rounded-lg">
                 <div className="flex justify-between items-center text-sm">
