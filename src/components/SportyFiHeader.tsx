@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/header/Logo';
 import NavigationLinks from '@/components/header/NavigationLinks';
@@ -22,7 +21,7 @@ const SportyFiHeader = () => {
             linkClassName="text-foreground hover:text-sportyfi-orange font-medium transition-colors flex items-center gap-1"
           />
 
-          {/* Auth Buttons - ThemeToggle has been removed */}
+          {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <AuthButtons className="flex items-center space-x-4" />
           </div>
