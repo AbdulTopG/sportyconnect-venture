@@ -1,29 +1,21 @@
-
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Map, Calendar, Search } from 'lucide-react';
-
 const HeroSection = () => {
   const navigate = useNavigate();
-  
   const handleFindMatches = () => {
     navigate('/matches');
   };
-  
   const handleHostMatch = () => {
     navigate('/matches/create');
   };
-  
   const handleGroundsBooking = () => {
     navigate('/venues');
   };
-  
   const handleWatchMatches = () => {
     navigate('/watch');
   };
-  
-  return (
-    <section className="relative bg-gradient-to-r from-sportyfi-black to-sportyfi-darkGray text-white py-20 md:py-28 overflow-hidden">
+  return <section className="relative bg-gradient-to-r from-sportyfi-black to-sportyfi-darkGray text-white py-20 md:py-28 overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-40 h-40 rounded-full bg-sportyfi-orange blur-3xl"></div>
@@ -54,7 +46,7 @@ const HeroSection = () => {
                 Host a Match
               </Button>
               
-              <Button variant="outline" onClick={handleWatchMatches} className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex items-center gap-2 justify-center">
+              <Button variant="outline" onClick={handleWatchMatches} className="border-white text-white font-semibold h-14 text-lg w-full flex items-center gap-2 justify-center bg-sportyfi-orange">
                 <PlayCircle size={20} />
                 Watch Matches
                 <span className="ml-1 bg-red-500 text-xs px-1.5 py-0.5 rounded-full animate-pulse text-indigo-50">Live</span>
@@ -79,8 +71,6 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
