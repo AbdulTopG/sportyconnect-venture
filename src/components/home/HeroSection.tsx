@@ -41,7 +41,7 @@ const HeroSection = () => {
                 Find Matches
               </Button>
               
-              <Button variant="outline" onClick={handleHostMatch} className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex gap-2">
+              <Button variant="outline" onClick={handleHostMatch} className="border-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex gap-2 text-sportyfi-orange">
                 <Calendar size={20} />
                 Host a Match
               </Button>
