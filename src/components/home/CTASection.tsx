@@ -50,7 +50,7 @@ const CTASection = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/auth?tab=signup">
-              <Button className="bg-white text-sportyfi-orange hover:bg-gray-100 font-semibold px-8 py-6 h-auto text-lg w-full sm:w-auto">
+              <Button className="font-semibold px-8 py-6 h-auto text-lg w-full sm:w-auto bg-sportyfi-orange text-sportyfi-lightGray">
                 Create Your Account
               </Button>
             </Link>
