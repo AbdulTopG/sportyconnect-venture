@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Select, 
@@ -49,15 +48,15 @@ const locationOptions = [
   'Jaipur'
 ];
 
-interface VenueFilterProps {
-  onFilterChange: (filters: VenueFilterValues) => void;
-}
-
 export interface VenueFilterValues {
   searchQuery: string;
   sport: string;
   location: string;
   priceRange: [number, number];
+}
+
+interface VenueFilterProps {
+  onFilterChange: (filters: VenueFilterValues) => void;
 }
 
 const VenueFilter = ({ onFilterChange }: VenueFilterProps) => {

@@ -1,16 +1,34 @@
 
-import React from "react";
+import React, { useState } from "react";
 import SportyFiHeader from "@/components/SportyFiHeader";
 import NavigationButtons from "@/components/NavigationButtons";
-import { useVenues } from "@/hooks/use-venues";
+import { useQuery } from "@tanstack/react-query";
 import VenueCard from "@/components/venues/VenueCard";
 import VenueFilter from "@/components/venues/VenueFilter";
 import { Map, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useVenues } from "@/hooks/use-venues";
+import type { VenueWithRelations } from "@/integrations/supabase/client";
 
 const Venues = () => {
-  const { venues, isLoading, error, filters, updateFilter } = useVenues();
+  const [filterValues, setFilterValues] = useState({
+    searchQuery: '',
+    sport: 'All Sports',
+    location: 'All Locations',
+    priceRange: [0, 5000] as [number, number],
+  });
+
+  const { data: venues, isLoading, error } = useVenues({
+    sportFilter: filterValues.sport,
+    locationFilter: filterValues.location,
+    priceRange: filterValues.priceRange,
+    searchQuery: filterValues.searchQuery
+  });
+
+  const handleFilterChange = (newFilterValues: typeof filterValues) => {
+    setFilterValues(newFilterValues);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,7 +48,7 @@ const Venues = () => {
             </Link>
           </div>
           
-          <VenueFilter filters={filters} updateFilter={updateFilter} />
+          <VenueFilter onFilterChange={handleFilterChange} />
           
           {isLoading ? (
             <div className="py-12 text-center">
@@ -41,19 +59,19 @@ const Venues = () => {
             <div className="py-12 text-center">
               <p className="text-lg text-red-600">Error loading venues. Please try again later.</p>
             </div>
-          ) : venues.length === 0 ? (
+          ) : venues && venues.length === 0 ? (
             <div className="py-12 text-center">
               <Map className="mx-auto h-16 w-16 text-gray-400 mb-4" />
               <p className="text-xl font-semibold mb-2">No venues found</p>
               <p className="text-gray-500">Try adjusting your filters or check back later for more options</p>
             </div>
-          ) : (
+          ) : venues ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
               {venues.map((venue) => (
                 <VenueCard key={venue.id} venue={venue} />
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </main>
       
