@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
-import Footer from '@/components/Footer';
+import NavigationButtons from '@/components/NavigationButtons';
 
 import MatchInfo from '@/components/match/MatchInfo';
 import MatchActions from '@/components/match/MatchActions';
@@ -57,7 +57,7 @@ const MatchDetailPage = () => {
         <main className="flex-grow flex items-center justify-center">
           <LoadingState message={`Loading match ${id}...`} />
         </main>
-        <Footer />
+        <NavigationButtons />
       </div>
     );
   }
@@ -69,7 +69,7 @@ const MatchDetailPage = () => {
         <main className="flex-grow flex items-center justify-center">
           <ErrorState error={error} navigate={navigate} />
         </main>
-        <Footer />
+        <NavigationButtons />
       </div>
     );
   }
@@ -105,7 +105,7 @@ const MatchDetailPage = () => {
         </div>
       </main>
       
-      <Footer />
+      <NavigationButtons />
     </div>
   );
 };

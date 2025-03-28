@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import SportyFiHeader from '@/components/SportyFiHeader';
-import Footer from '@/components/Footer';
+import NavigationButtons from '@/components/NavigationButtons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -121,7 +121,7 @@ const Matches = () => {
         </div>
       </main>
       
-      <Footer />
+      <NavigationButtons />
     </div>
   );
 };
