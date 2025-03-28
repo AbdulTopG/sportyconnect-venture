@@ -1,29 +1,21 @@
-
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Map, Calendar, Search } from 'lucide-react';
-
 const HeroSection = () => {
   const navigate = useNavigate();
-  
   const handleFindMatches = () => {
     navigate('/matches');
   };
-  
   const handleHostMatch = () => {
     navigate('/matches/create');
   };
-  
   const handleGroundsBooking = () => {
     navigate('/venues');
   };
-  
   const handleWatchMatches = () => {
     navigate('/watch');
   };
-
-  return (
-    <section className="relative bg-gradient-to-r from-sportyfi-black to-sportyfi-darkGray text-white py-20 md:py-28 overflow-hidden">
+  return <section className="relative bg-gradient-to-r from-sportyfi-black to-sportyfi-darkGray text-white py-20 md:py-28 overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-40 h-40 rounded-full bg-sportyfi-orange blur-3xl"></div>
@@ -44,38 +36,23 @@ const HeroSection = () => {
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Button 
-                className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold h-14 text-lg w-full flex gap-2"
-                onClick={handleFindMatches}
-              >
+              <Button className="bg-sportyfi-orange hover:bg-red-600 text-white font-semibold h-14 text-lg w-full flex gap-2" onClick={handleFindMatches}>
                 <Search size={20} />
                 Find Matches
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={handleHostMatch} 
-                className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex gap-2"
-              >
+              <Button variant="outline" onClick={handleHostMatch} className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex gap-2">
                 <Calendar size={20} />
                 Host a Match
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={handleWatchMatches} 
-                className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex items-center gap-2"
-              >
+              <Button variant="outline" onClick={handleWatchMatches} className="border-white text-white font-semibold h-14 text-lg w-full flex items-center gap-2 bg-sportyfi-orange">
                 <PlayCircle size={20} />
                 Watch Matches
-                <span className="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-pulse">Live</span>
+                <span className="ml-1 bg-red-500 text-xs px-1.5 py-0.5 rounded-full animate-pulse text-indigo-50">Live</span>
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={handleGroundsBooking} 
-                className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex items-center gap-2"
-              >
+              <Button variant="outline" onClick={handleGroundsBooking} className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex items-center gap-2">
                 <Map size={20} />
                 Grounds Booking
               </Button>
@@ -95,11 +72,7 @@ const HeroSection = () => {
           
           <div className="hidden md:block relative">
             <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-2xl transform rotate-1">
-              <img 
-                src="https://images.unsplash.com/photo-1595435124324-81edc014bba9?q=80&w=1160" 
-                alt="Sports" 
-                className="w-full h-full object-cover"
-              />
+              <img src="https://images.unsplash.com/photo-1595435124324-81edc014bba9?q=80&w=1160" alt="Sports" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
               <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-sm rounded-lg">
                 <div className="flex justify-between items-center text-sm">
@@ -115,17 +88,11 @@ const HeroSection = () => {
             </div>
             
             <div className="absolute -bottom-4 -left-4 w-40 h-40 rounded-lg overflow-hidden shadow-xl">
-              <img 
-                src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735" 
-                alt="Sports" 
-                className="w-full h-full object-cover"
-              />
+              <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=735" alt="Sports" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
