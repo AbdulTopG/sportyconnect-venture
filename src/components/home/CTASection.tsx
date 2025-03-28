@@ -55,7 +55,7 @@ const CTASection = () => {
               </Button>
             </Link>
             <Link to="/matches">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10 font-semibold px-8 py-6 h-auto text-lg w-full sm:w-auto">
+              <Button variant="outline" className="border-white text-white font-semibold px-8 py-6 h-auto text-lg w-full sm:w-auto bg-sportyfi-orange">
                 Browse Matches
               </Button>
             </Link>
