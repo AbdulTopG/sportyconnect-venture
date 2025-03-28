@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SportyFiHeader from '@/components/SportyFiHeader';
-import Footer from '@/components/Footer';
+import NavigationButtons from '@/components/NavigationButtons';
 import LiveMatchCard from '@/components/watch/LiveMatchCard';
 import UpcomingMatchCard from '@/components/watch/UpcomingMatchCard';
 import RecordedMatchCard from '@/components/watch/RecordedMatchCard';
@@ -269,7 +270,7 @@ const WatchMatches = () => {
         </div>
       </main>
       
-      <Footer />
+      <NavigationButtons />
     </div>
   );
 };
