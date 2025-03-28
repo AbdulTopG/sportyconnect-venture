@@ -52,7 +52,7 @@ const HeroSection = () => {
                 <span className="ml-1 bg-red-500 text-xs px-1.5 py-0.5 rounded-full animate-pulse text-indigo-50">Live</span>
               </Button>
               
-              <Button variant="outline" onClick={handleGroundsBooking} className="border-white text-white hover:bg-white/10 font-semibold h-14 text-lg w-full flex items-center gap-2 justify-center">
+              <Button variant="outline" onClick={handleGroundsBooking} className="border-white text-white font-semibold h-14 text-lg w-full flex items-center gap-2 justify-center bg-sportyfi-orange">
                 <Map size={20} />
                 Grounds Booking
               </Button>
