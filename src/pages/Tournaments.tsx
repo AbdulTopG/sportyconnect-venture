@@ -1,7 +1,7 @@
 
 import React from 'react';
 import SportyFiHeader from '@/components/SportyFiHeader';
-import Footer from '@/components/Footer';
+import NavigationButtons from '@/components/NavigationButtons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays, MapPin, Users, Trophy } from 'lucide-react';
@@ -167,7 +167,7 @@ const Tournaments = () => {
         </div>
       </main>
       
-      <Footer />
+      <NavigationButtons />
     </div>
   );
 };
