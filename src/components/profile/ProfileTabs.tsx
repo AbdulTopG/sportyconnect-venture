@@ -23,6 +23,17 @@ const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProf
     });
   }, [activeTab, profile, loading]);
 
+  // Function to handle profile save with proper fallback
+  const handleSave = () => {
+    if (handleSaveProfile) {
+      handleSaveProfile();
+    } else {
+      console.log('No handleSaveProfile function provided');
+      // Switch back to dashboard tab as a fallback
+      setActiveTab('dashboard');
+    }
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <TabsList className="w-full max-w-md mx-auto">
@@ -42,7 +53,7 @@ const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProf
             {loading?.profile ? (
               <MatchesLoadingState message="Loading profile data..." />
             ) : profile ? (
-              <ProfileEditForm user={profile} onSave={handleSaveProfile || (() => {})} />
+              <ProfileEditForm user={profile} onSave={handleSave} />
             ) : (
               <p className="text-center text-muted-foreground">Unable to load profile</p>
             )}

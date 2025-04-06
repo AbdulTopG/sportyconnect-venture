@@ -78,6 +78,7 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
         description: "Your profile has been updated successfully",
       });
       
+      // Important: Call the onSave callback to update the parent component
       onSave();
     } catch (error) {
       console.error('Error updating profile:', error);
