@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlayerDashboard from '@/components/match/PlayerDashboard';
 import ProfileEditForm from '@/components/match/ProfileEditForm';
 import MatchesLoadingState from '@/components/match/MatchesLoadingState';
+import { toast } from '@/hooks/use-toast';
 
 interface ProfileTabsProps {
   activeTab: string;
@@ -14,22 +15,41 @@ interface ProfileTabsProps {
 }
 
 const ProfileTabs = ({ activeTab, setActiveTab, profile, loading, handleSaveProfile }: ProfileTabsProps) => {
-  // Add debugging information
+  // Add enhanced debugging information
   useEffect(() => {
     console.log('ProfileTabs rendering with:', { 
       activeTab, 
       profileLoaded: !!profile, 
-      loading 
+      loading,
+      handleSaveProfileDefined: !!handleSaveProfile
     });
-  }, [activeTab, profile, loading]);
+  }, [activeTab, profile, loading, handleSaveProfile]);
 
-  // Function to handle profile save with proper fallback
+  // Function to handle profile save with proper error handling
   const handleSave = () => {
-    if (handleSaveProfile) {
-      handleSaveProfile();
-    } else {
-      console.log('No handleSaveProfile function provided');
-      // Switch back to dashboard tab as a fallback
+    console.log('Profile save initiated');
+    try {
+      if (handleSaveProfile) {
+        handleSaveProfile();
+        console.log('handleSaveProfile executed successfully');
+      } else {
+        console.warn('No handleSaveProfile function provided');
+        toast({
+          title: "Warning",
+          description: "Could not save profile changes properly. Please try again.",
+          variant: "destructive",
+        });
+        // Switch back to dashboard tab as a fallback
+        setActiveTab('dashboard');
+      }
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile changes. Please try again.",
+        variant: "destructive",
+      });
+      // Ensure we still switch tabs even if there's an error
       setActiveTab('dashboard');
     }
   };

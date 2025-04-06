@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +29,16 @@ const AVAILABLE_SPORTS = [
 ];
 
 const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
+  // Add debugging for mount/unmount and prop changes
+  useEffect(() => {
+    console.log('ProfileEditForm mounted with user:', user);
+    console.log('onSave is defined:', !!onSave);
+    
+    return () => {
+      console.log('ProfileEditForm unmounting');
+    };
+  }, [user, onSave]);
+
   const [username, setUsername] = useState(user.username || '');
   const [bio, setBio] = useState(user.bio || '');
   const [location, setLocation] = useState(user.location || '');
@@ -36,6 +46,7 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
   const [preferredSports, setPreferredSports] = useState<string[]>(user.preferred_sports || []);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(user.avatar_url || '');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   // Calculate initial profile completeness
   const initialCompleteness = calculateProfileCompleteness(user);
@@ -52,7 +63,10 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitAttempted(true);
     setIsSaving(true);
+    
+    console.log('Profile form submitted, saving changes...');
     
     try {
       // Update user profile
@@ -73,22 +87,38 @@ const ProfileEditForm = ({ user, onSave }: ProfileEditFormProps) => {
         throw error;
       }
       
+      console.log('Profile updated successfully');
+      
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
       });
       
-      // Important: Call the onSave callback to update the parent component
+      // Always call onSave, even in the finally block to ensure it's called
+      // This ensures the parent component is updated regardless of success/failure
+      console.log('Calling onSave callback');
       onSave();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
         title: "Update failed",
-        description: "There was an error updating your profile",
+        description: error.message || "There was an error updating your profile",
         variant: "destructive",
       });
     } finally {
+      // In case the onSave callback throws an error, we still want to reset the saving state
       setIsSaving(false);
+      
+      // If we haven't called onSave due to an error in the try block,
+      // make sure we call it here as a fallback
+      if (submitAttempted) {
+        try {
+          onSave();
+        } catch (callbackError) {
+          console.error('Error in onSave callback:', callbackError);
+        }
+        setSubmitAttempted(false);
+      }
     }
   };
 
